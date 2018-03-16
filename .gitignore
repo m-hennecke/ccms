@@ -1,0 +1,8 @@
+# Prerequisites
+*.d
+
+# Object files
+*.o
+
+# Program
+kcms
