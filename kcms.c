@@ -2,18 +2,15 @@
 #include <err.h>
 #include <stdio.h>
 #include "filehelper.h"
+#include "sitemap.h"
+
+void sitemap_handler(const char *content_dir);
 
 int
 main(int argc, char **argv)
 {
-	struct dir_list *dir = get_dir_entries(".");
-	if (! dir)
-		errx(1, "Unable to read \".\" directory\n");
-	struct dir_entry *entry;
-	TAILQ_FOREACH(entry, &dir->entries, entries) {
-		printf("%s\n", entry->filename);
-	}
-	printf("Newest: %lld\n", dir->newest);
-	dir_list_free(dir);
+	struct sitemap *sitemap = sitemap_new("/var/www/cms/content",
+			"www.markus-hennecke.de");
+	printf("%s\n", sitemap_toxml(sitemap));
 	return 0;
 }

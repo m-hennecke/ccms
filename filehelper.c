@@ -3,9 +3,11 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <err.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "filehelper.h"
 
@@ -17,8 +19,14 @@ get_dir_entries(const char *_directory)
 		struct dir_list *list = malloc(sizeof(struct dir_list));
 		if (list == NULL)
 			err(1, NULL);
+		int cwd = open(".", O_DIRECTORY | O_RDONLY);
+		if (cwd == -1)
+			err(1, NULL);
+		if (chdir(_directory) == -1)
+			err(1, NULL);
 		TAILQ_INIT(&list->entries);
 		list->newest = 0;
+		list->path = strdup(_directory);
 		struct dirent *dirent;
 		while ((dirent = readdir(dir)) != NULL) {
 			struct dir_entry *entry;
@@ -32,6 +40,7 @@ get_dir_entries(const char *_directory)
 				list->newest = entry->sb.st_mtim.tv_sec;
 		}
 		closedir(dir);
+		fchdir(cwd);
 		return list;
 	}
 	return NULL;
@@ -46,7 +55,7 @@ dir_entry_new(const char *_filename)
 	if (entry == NULL)
 		err(1, NULL);
 	entry->filename = strdup(_filename);
-	if (stat(_filename, &entry->sb) != 0)
+	if (lstat(_filename, &entry->sb) != 0)
 		err(1, "stat error on file %s", _filename);
 	return entry;
 }
@@ -62,6 +71,18 @@ dir_entry_free(struct dir_entry *_entry)
 }
 
 
+bool
+dir_entry_exists(const char *_name, struct dir_list *_dir)
+{
+	struct dir_entry *entry;
+	TAILQ_FOREACH(entry, &_dir->entries, entries) {
+		if (strcmp(entry->filename, _name) == 0)
+			return true;
+	}
+	return false;
+}
+
+
 void
 dir_list_free(struct dir_list *_list)
 {
@@ -70,4 +91,15 @@ dir_list_free(struct dir_list *_list)
 		TAILQ_REMOVE(&_list->entries, entry, entries);
 		dir_entry_free(entry);
 	}
+	free(_list->path);
+}
+
+
+bool
+file_exists(const char *_filename)
+{
+	struct stat sb;
+	if (lstat(_filename, &sb) == -1)
+		return false;
+	return true;
 }
