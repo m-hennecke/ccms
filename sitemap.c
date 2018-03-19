@@ -11,6 +11,7 @@
 #include <unistd.h>
 
 #include "filehelper.h"
+#include "buffer.h"
 #include "sitemap.h"
 
 
@@ -161,71 +162,37 @@ bailout:
 }
 
 
-struct xml_buffer {
-	SIMPLEQ_ENTRY(xml_buffer)	entries;
-	size_t			size;
-	char			data[1];
-};
-
-static struct xml_buffer *xml_buffer_new(char *_data);
-struct xml_buffer *
-xml_buffer_new(char *_data)
-{
-	size_t data_len = strlen(_data);
-	struct xml_buffer *buf = malloc(sizeof(struct xml_buffer) + data_len);
-	buf->size = data_len;
-	strlcpy(buf->data, _data, data_len + 1);
-	return buf;
-}
-
-
 char *
 sitemap_toxml(struct sitemap *s)
 {
-	SIMPLEQ_HEAD(, xml_buffer) buffers;
-	SIMPLEQ_INIT(&buffers);
+	struct buffer_list *xml = buffer_list_new();
 
-	struct xml_buffer *buf = xml_buffer_new(
+	buffer_list_add_string(xml,
 		"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
 		"<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\" "
 		"xmlns:xsi=\"http://www.w3.org/2001/XMSchema-instance\" "
 		"xsi:schemaLocation="
 		"\"http://www.sitemaps.org/schemas/sitemap/0.9\n"
 		"http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd\">\n");
-	SIMPLEQ_INSERT_TAIL(&buffers, buf, entries);
 	struct lang_entry *lang;
 	TAILQ_FOREACH(lang, &s->languages, entries) {
 		struct url_entry *url;
 		TAILQ_FOREACH(url, &lang->pages, entries) {
-			buf  = xml_buffer_new("<url><loc>");
-			SIMPLEQ_INSERT_TAIL(&buffers, buf, entries);
-			buf = xml_buffer_new(url->url);
-			SIMPLEQ_INSERT_TAIL(&buffers, buf, entries);
-			buf = xml_buffer_new("</loc><lastmod>");
-			SIMPLEQ_INSERT_TAIL(&buffers, buf, entries);
-			buf = xml_buffer_new(format_time(url->mtime));
-			SIMPLEQ_INSERT_TAIL(&buffers, buf, entries);
-			buf = xml_buffer_new("</lastmod></url>");
-			SIMPLEQ_INSERT_TAIL(&buffers, buf, entries);
+			buffer_list_add_string(xml, "<url><loc>");
+			buffer_list_add_string(xml, url->url);
+			buffer_list_add_string(xml, "</loc><lastmod>");
+			char *isots = format_time(url->mtime);
+			buffer_list_add_string(xml, isots);
+			free(isots);
+			buffer_list_add_string(xml, "</lastmod></url>");
 		}
 	}
-	buf = xml_buffer_new("</urlset>");
-	SIMPLEQ_INSERT_TAIL(&buffers, buf, entries);
+	buffer_list_add_string(xml, "</urlset>");
+	char *xml_string = buffer_list_concat_string(xml);
 
-	size_t len = 0;
-	SIMPLEQ_FOREACH(buf, &buffers, entries) {
-		len += buf->size;
-	}
+	buffer_list_free(xml);
 
-	char *xml = malloc(len + 1);
-	xml[0] = '\0';
-	while (! SIMPLEQ_EMPTY(&buffers)) {
-		buf = SIMPLEQ_FIRST(&buffers);
-		strlcat(xml, buf->data, len + 1);
-		SIMPLEQ_REMOVE_HEAD(&buffers, entries);
-	}
-
-	return xml;
+	return xml_string;
 }
 
 

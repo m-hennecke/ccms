@@ -3,7 +3,7 @@ BINDIR=		${DESTDIR}${PREFIX}
 DAEMON=		${BINDIR}/${PROG}
 
 PROG=		kcms
-SRCS=		kcms.c filehelper.c sitemap.c
+SRCS=		kcms.c filehelper.c buffer.c sitemap.c
 
 CFLAGS+=	-Wall -I${.CURDIR}
 CFLAGS+=	-Wstrict-prototypes -Wmissing-prototypes
