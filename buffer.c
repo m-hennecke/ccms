@@ -33,7 +33,8 @@ buffer_list_new(void)
 	struct buffer_list *bl = malloc(sizeof(struct buffer_list));
 	if (bl == NULL)
 		err(1, NULL);
-	SIMPLEQ_INIT(&bl->buffers);
+	TAILQ_INIT(&bl->buffers);
+	bl->size = 0;
 	return bl;
 }
 
@@ -42,12 +43,9 @@ void
 buffer_list_free(struct buffer_list *_bl)
 {
 	if (_bl) {
-		while (! SIMPLEQ_EMPTY(&_bl->buffers)) {
-			struct buffer *b = SIMPLEQ_FIRST(&_bl->buffers);
-			SIMPLEQ_REMOVE_HEAD(&_bl->buffers, entries);
+		struct buffer *b;
+		while ((b = buffer_list_rem_head(_bl)))
 			free(b);
-		}
-		free(_bl);
 	}
 }
 
@@ -73,15 +71,11 @@ char *
 buffer_list_concat_string(struct buffer_list *_bl)
 {
 	struct buffer *buf;
-	size_t len = 0;
-	SIMPLEQ_FOREACH(buf, &_bl->buffers, entries) {
-		len += buf->size;
-	}
 
-	char *out_string = malloc(len + 1);
+	char *out_string = malloc(_bl->size + 1);
 	out_string[0] = '\0';
-	SIMPLEQ_FOREACH(buf, &_bl->buffers, entries) {
-		strlcat(out_string, buf->data, len + 1);
+	TAILQ_FOREACH(buf, &_bl->buffers, entries) {
+		strlcat(out_string, buf->data, _bl->size + 1);
 	}
 
 	return out_string;
@@ -92,7 +86,8 @@ void
 buffer_list_add_string(struct buffer_list *_bl, char *_s)
 {
 	struct buffer *buf = buffer_new(_s);
-	SIMPLEQ_INSERT_TAIL(&_bl->buffers, buf, entries);
+	TAILQ_INSERT_TAIL(&_bl->buffers, buf, entries);
+	_bl->size += buf->size;
 }
 
 
@@ -100,5 +95,46 @@ void
 buffer_list_add(struct buffer_list *_bl, void *_data, size_t _size)
 {
 	struct buffer *buf = buffer_bin_new(_data, _size);
-	SIMPLEQ_INSERT_TAIL(&_bl->buffers, buf, entries);
+	TAILQ_INSERT_TAIL(&_bl->buffers, buf, entries);
+	_bl->size += buf->size;
+}
+
+
+struct buffer *
+buffer_list_rem_head(struct buffer_list *_bl)
+{
+	if (! TAILQ_EMPTY(&_bl->buffers)) {
+		struct buffer *b = TAILQ_FIRST(&_bl->buffers);
+		_bl->size -= b->size;
+		TAILQ_REMOVE(&_bl->buffers, b, entries);
+		return b;
+	}
+	return NULL;
+}
+
+
+struct buffer *
+buffer_list_rem_tail(struct buffer_list *_bl)
+{
+	if (! TAILQ_EMPTY(&_bl->buffers)) {
+		struct buffer *b = TAILQ_LAST(&_bl->buffers, buffer_list_head);
+		_bl->size -= b->size;
+		TAILQ_REMOVE(&_bl->buffers, b, entries);
+		return b;
+	}
+	return NULL;
+}
+
+struct buffer *
+buffer_list_rem(struct buffer_list *_bl, struct buffer *_buf)
+{
+	struct buffer *b;
+	TAILQ_FOREACH(b, &_bl->buffers, entries) {
+		if (b == _buf) {
+			_bl->size -= _buf->size;
+			TAILQ_REMOVE(&_bl->buffers, b, entries);
+			return b;
+		}
+	}
+	return _buf;
 }
