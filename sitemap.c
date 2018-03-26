@@ -22,6 +22,7 @@ static struct url_entry		*read_pages_dir(char *, char *, char *, char *);
 static char			*format_time(time_t _datetime);
 static char			*format_url(char *_hostname, char *_lang,
 		char *_page, bool ssl);
+static struct buffer_list	*create_xml_buffers(struct sitemap *);
 
 struct url_entry *
 url_entry_new(char *_url, time_t _mtime)
@@ -162,8 +163,8 @@ bailout:
 }
 
 
-char *
-sitemap_toxml(struct sitemap *s)
+struct buffer_list *
+create_xml_buffers(struct sitemap *s)
 {
 	struct buffer_list *xml = buffer_list_new();
 
@@ -188,12 +189,35 @@ sitemap_toxml(struct sitemap *s)
 		}
 	}
 	buffer_list_add_string(xml, "</urlset>");
+	return xml;
+}
+
+char *
+sitemap_toxml(struct sitemap *_s)
+{
+	struct buffer_list *xml = create_xml_buffers(_s);
 	char *xml_string = buffer_list_concat_string(xml);
-
 	buffer_list_free(xml);
-
 	return xml_string;
 }
+
+
+char *
+sitemap_toxmlgz(struct sitemap *_s, size_t *_size, const char *_filename,
+		uint32_t _mtime)
+{
+	struct buffer_list *xml = create_xml_buffers(_s);
+	struct buffer_list *gz = buffer_list_gzip(xml, _filename, _mtime);
+
+	char *result = buffer_list_concat(gz);
+	*_size = gz->size;
+
+	buffer_list_free(gz);
+	buffer_list_free(xml);
+
+	return result;
+}
+
 
 
 char *
@@ -232,4 +256,26 @@ format_url(char *_hostname, char *_lang, char *_page, bool ssl)
 				_lang) == -1)
 		err(1, NULL);
 	return url;
+}
+
+
+uint32_t
+sitemap_newest(struct sitemap *_sitemap, const char *_lang)
+{
+	uint32_t result = 0;
+
+	struct lang_entry *lang;
+	TAILQ_FOREACH(lang, &_sitemap->languages, entries) {
+		if (!_lang || (strcmp(_lang, lang->lang) == 0)) {
+			if (lang->dir->newest > result)
+				result = lang->dir->newest;
+			struct url_entry *url;
+			TAILQ_FOREACH(url, &lang->pages, entries) {
+				if (url->dir->newest > result)
+					result = url->dir->newest;
+			}
+		}
+	}
+
+	return result;
 }
