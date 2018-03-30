@@ -14,9 +14,7 @@ LDSTATIC=	${STATIC}
 #DPADD+=		${LIBUTIL} ${LIBCRYPTO} ${LIBSSL} ${LIBTLS}
 NOMAN=		1
 
-CMS_HOSTNAME?=	`hostname`
-CMS_CONTENT_DIR?=	/var/www/cms/content
-CFLAGS+=	-DCMS_HOSTNAME=\"${CMS_HOSTNAME}\" \
-		-DCMS_CONTENT_DIR=\"${CMS_CONTENT_DIR}\"
+# include site settings
+.include "cmsconfig.mk"
 
 .include <bsd.prog.mk>

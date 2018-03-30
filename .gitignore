@@ -6,3 +6,6 @@
 
 # Program
 kcms
+
+# Server build-time configuration
+localconfig.mk
