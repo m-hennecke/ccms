@@ -4,8 +4,9 @@
 # Object files
 *.o
 
-# Program
+# Programs
 kcms
+sitemap/sitemap
 
 # Server build-time configuration
 localconfig.mk
