@@ -80,7 +80,7 @@ tmpl_data_get_variable(struct tmpl_data *_data, const char *_name)
 {
 	struct tmpl_var *var;
 	TAILQ_FOREACH(var, &_data->variables, entry) {
-		if (strcmp(_name, var->name.name))
+		if (strcmp(_name, var->name.name) == 0)
 			return var;
 	}
 	return NULL;
@@ -105,7 +105,7 @@ tmpl_data_get_loop(struct tmpl_data *_data, const char *_name)
 {
 	struct tmpl_loop *loop;
 	TAILQ_FOREACH(loop, &_data->loops, entry) {
-		if (strcmp(_name, loop->name.name))
+		if (strcmp(_name, loop->name.name) == 0)
 			return loop;
 	}
 	return NULL;
