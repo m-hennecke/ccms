@@ -161,6 +161,15 @@ buffer_list_add_buffer(struct buffer_list *_bl, struct buffer *_buf)
 }
 
 
+void
+buffer_list_add_list(struct buffer_list *_bl, struct buffer_list *_add)
+{
+	struct buffer *b;
+	while ((b = buffer_list_rem_head(_add)))
+		buffer_list_add_buffer(_bl, b);
+}
+
+
 struct buffer *
 buffer_list_rem_head(struct buffer_list *_bl)
 {
