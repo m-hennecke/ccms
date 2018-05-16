@@ -135,6 +135,16 @@ buffer_list_add_string(struct buffer_list *_bl, const char *_s)
 
 
 void
+buffer_list_add_stringn(struct buffer_list *_bl, const char *_s, size_t _len)
+{
+	struct buffer *buf = buffer_empty_new(_len + 1);
+	strlcpy(buf->data, _s, _len);
+	TAILQ_INSERT_TAIL(&_bl->buffers, buf, entries);
+	_bl->size += buf->size;
+}
+
+
+void
 buffer_list_add(struct buffer_list *_bl, const void *_data, size_t _size)
 {
 	struct buffer *buf = buffer_bin_new(_data, _size);

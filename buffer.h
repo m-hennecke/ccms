@@ -26,6 +26,8 @@ void			 buffer_list_add(struct buffer_list *, const void *,
 		size_t);
 void			 buffer_list_add_string(struct buffer_list *,
 		const char *);
+void			 buffer_list_add_stringn(struct buffer_list *,
+		const char *, size_t);
 void			 buffer_list_add_buffer(struct buffer_list *,
 		struct buffer *);
 struct buffer		*buffer_list_rem_head(struct buffer_list *);
