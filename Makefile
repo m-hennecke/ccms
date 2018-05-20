@@ -1,7 +1,8 @@
 # Main Makefile
 
 PROG=		kcms
-SRCS=		kcms.c filehelper.c buffer.c sitemap.c template.c
+SRCS=		kcms.c filehelper.c buffer.c sitemap.c template.c \
+		tmpl_parser.c
 
 SUBDIR=		sitemap
 

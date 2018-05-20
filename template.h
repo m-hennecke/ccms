@@ -20,6 +20,8 @@
 #include <sys/queue.h>
 #include <stdbool.h>
 
+#include "buffer.h"
+
 struct tmpl_name {
 	char					*name;
 };
@@ -60,5 +62,9 @@ struct tmpl_loop	*tmpl_loop_new(const char *);
 bool			 tmpl_loop_isempty(struct tmpl_loop *);
 void			 tmpl_loop_add_data(struct tmpl_loop *,
 				struct tmpl_data *);
+
+struct buffer_list	*tmpl_parse(const char *, size_t _len,
+				struct tmpl_data *);
+struct buffer_list	*tmpl_parse_file(const char *, struct tmpl_data *);
 
 #endif // _TEMPLATE_H_
