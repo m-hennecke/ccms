@@ -51,7 +51,7 @@ and the current `struct tmpl_data` object is passed as the data structure.
 
 #### TMPL_IF
 
-Usage: `<TMPL_IF name="identifier">...</TMPL_IF>
+Usage: `<TMPL_IF name="identifier">...</TMPL_IF>`
 
 If the "identifier" references a loop the condition evaluates to `true` if
 the loop is not empty. If a variable is referenced the variable will evaluate
@@ -66,19 +66,19 @@ to `false` if one of the following conditions apply:
 Implementation: The filter parser takes the `</TMPL_IF>` tag and
 passes the range between those tags to a new instance of the parser with
 the current `struct tmpl_data`. In case of an `<TMPL_ELSE>` belonging to
-the conditional block either the part before the ELSE or after the ELSE
-is parsed by passing the current `struct tmpl_data` object to a new
-parser instance.
+the conditional block either the part before the `<TMPL_ELSE>` or after the
+`<TMPL_ELSE>` is parsed by passing the current `struct tmpl_data` object to
+a new parser instance.
 
 #### TMPL_UNLESS
 
-Usage: `<TMPL_UNLESS name="identifier">...</TMPL_UNLESS>
+Usage: `<TMPL_UNLESS name="identifier">...</TMPL_UNLESS>`
 
 Same as `TMPL_IF` but logically negated.
 
 #### TMPL_ELSE
 
-Usage: `<TMPL_IF name="identifier">...<TMPL_ELSE>...</TMPL_IF>
+Usage: `<TMPL_IF name="identifier">...<TMPL_ELSE>...</TMPL_IF>`
 
 Works the same way with `TMPL_UNLESS`.
 
