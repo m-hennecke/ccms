@@ -32,7 +32,7 @@
 
 typedef enum {
 	ELSE = 0,
-	IF, INCL, LOOP, UNLESS, VAR,
+	IF, INCL, INCLUDE, LOOP, UNLESS, VAR,
 	MAX__TAG
 } tag_type_t;
 
@@ -65,9 +65,9 @@ struct tag_strings {
 				struct tag_info *);
 };
 
-#define TMPL_RX_PATTERN "(<(TMPL_"				\
-	"(ELSE|"						\
-	"(IF|INCL|LOOP|VAR|UNLESS)( +name=\"([^\"]+)\"))?)"	\
+#define TMPL_RX_PATTERN "(<(TMPL_"					\
+	"(ELSE|"							\
+	"(IF|INCL|INCLUDE|LOOP|VAR|UNLESS)( +name=\"([^\"]+)\"))?)"	\
 	">)|(</TMPL_(IF|INCL|LOOP|VAR|UNLESS *>))"
 #define TMPL_RX_MAX_GROUPS 10
 static regex_t _rx;
@@ -100,12 +100,13 @@ static char	*tmpl_handle_var(struct parser_state *, struct tag_info *);
 
 
 static struct tag_strings tags[MAX__TAG] = {
-	{ ELSE,   "TMPL_ELSE",    9, tmpl_handle_else },
-	{ IF,     "TMPL_IF",      7, tmpl_handle_if },
-	{ INCL,   "TMPL_INCL",    9, tmpl_handle_incl },
-	{ LOOP,   "TMPL_LOOP",    9, tmpl_handle_loop },
-	{ UNLESS, "TMPL_UNLESS", 11, tmpl_handle_if },
-	{ VAR,    "TMPL_VAR",     8, tmpl_handle_var },
+	{ ELSE,    "TMPL_ELSE",     9, tmpl_handle_else },
+	{ IF,      "TMPL_IF",       7, tmpl_handle_if   },
+	{ INCL,    "TMPL_INCL",     9, tmpl_handle_incl },
+	{ INCLUDE, "TMPL_INCLUDE", 12, tmpl_handle_incl },
+	{ LOOP,    "TMPL_LOOP",     9, tmpl_handle_loop },
+	{ UNLESS,  "TMPL_UNLESS",  11, tmpl_handle_if   },
+	{ VAR,     "TMPL_VAR",      8, tmpl_handle_var  },
 };
 
 
