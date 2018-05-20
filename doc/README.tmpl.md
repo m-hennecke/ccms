@@ -16,9 +16,6 @@ See the header file `template.h` for functions aiding in setting up
 a `struct tmpl_data` structure to be used as an argument to the
 `tmpl_parse()`  and `tmpl_parse_file()` functions.
 
-TODO: Describe how to add search paths to be searched for files to be
-included via the `TMPL_INCL` tag.
-
 ## Tag Description
 
 ### Variables
@@ -40,7 +37,7 @@ It is possible to build complex data structures with nested loops.
 
 ### Includes
 
-Usage: `<TMPL_INCL name="filename">`
+Usage: `<TMPL_INCL name="filename">` or `<TMPL_INCLUDE name="filename">`
 
 Includes the "filename" as if it was part of the template to the output.
 
