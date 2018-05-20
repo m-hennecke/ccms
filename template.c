@@ -21,7 +21,6 @@ tmpl_var_free(struct tmpl_var *_var)
 }
 
 
-
 struct tmpl_var *
 tmpl_var_new(const char *_name)
 {
@@ -69,7 +68,7 @@ tmpl_data_free(struct tmpl_data *_data)
 	}
 	while ((loop = TAILQ_FIRST(&_data->loops))) {
 		TAILQ_REMOVE(&_data->loops, loop, entry);
-		tmpl_var_free(var);
+		tmpl_loop_free(loop);
 	}
 	free(_data);
 }
