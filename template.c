@@ -148,3 +148,16 @@ tmpl_loop_new(const char *_name)
 	return loop;
 }
 
+
+bool
+tmpl_loop_isempty(struct tmpl_loop *_loop)
+{
+	return !(_loop && TAILQ_FIRST(&_loop->data));
+}
+
+
+void
+tmpl_loop_add_data(struct tmpl_loop *_loop, struct tmpl_data *_data)
+{
+	TAILQ_INSERT_TAIL(&_loop->data, _data, entry);
+}

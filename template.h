@@ -2,6 +2,7 @@
 #define _TEMPLATE_H_
 
 #include <sys/queue.h>
+#include <stdbool.h>
 
 struct tmpl_name {
 	char					*name;
@@ -40,5 +41,8 @@ struct tmpl_loop	*tmpl_data_get_loop(struct tmpl_data *, const char *);
 struct tmpl_loop	*tmpl_data_add_loop(struct tmpl_data *, const char *);
 void			 tmpl_loop_free(struct tmpl_loop *);
 struct tmpl_loop	*tmpl_loop_new(const char *);
+bool			 tmpl_loop_isempty(struct tmpl_loop *);
+void			 tmpl_loop_add_data(struct tmpl_loop *,
+				struct tmpl_data *);
 
 #endif // _TEMPLATE_H_
