@@ -49,12 +49,15 @@ void			 tmpl_name_free(struct tmpl_name *);
 void			 tmpl_var_free(struct tmpl_var *);
 struct tmpl_var		*tmpl_var_new(const char *);
 void			 tmpl_var_set(struct tmpl_var *, const char *);
+void			 tmpl_var_setn(struct tmpl_var *, const char *, size_t);
 void			 tmpl_data_free(struct tmpl_data *);
 struct tmpl_data	*tmpl_data_new(void);
 struct tmpl_var		*tmpl_data_get_variable(struct tmpl_data *,
 				const char *);
 void			 tmpl_data_set_variable(struct tmpl_data *,
 				const char *, const char *);
+void			 tmpl_data_set_variablen(struct tmpl_data *,
+				const char *, const char *, size_t);
 struct tmpl_loop	*tmpl_data_get_loop(struct tmpl_data *, const char *);
 struct tmpl_loop	*tmpl_data_add_loop(struct tmpl_data *, const char *);
 void			 tmpl_loop_free(struct tmpl_loop *);

@@ -58,6 +58,14 @@ tmpl_var_set(struct tmpl_var *_var, const char *_value)
 }
 
 
+void
+tmpl_var_setn(struct tmpl_var *_var, const char *_value, size_t _len)
+{
+	free(_var->value);
+	_var->value = strndup(_value, _len);
+}
+
+
 struct tmpl_data *
 tmpl_data_new(void)
 {
@@ -112,6 +120,19 @@ tmpl_data_set_variable(struct tmpl_data *_data, const char *_name,
 		TAILQ_INSERT_TAIL(&_data->variables, var, entry);
 	}
 	tmpl_var_set(var, _value);
+}
+
+
+void
+tmpl_data_set_variablen(struct tmpl_data *_data, const char *_name,
+		const char *_value, size_t _len)
+{
+	struct tmpl_var *var = tmpl_data_get_variable(_data, _name);
+	if (var == NULL) {
+		var = tmpl_var_new(_name);
+		TAILQ_INSERT_TAIL(&_data->variables, var, entry);
+	}
+	tmpl_var_setn(var, _value, _len);
 }
 
 
