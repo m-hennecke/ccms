@@ -27,6 +27,7 @@
 #include <string.h>
 
 #include "buffer.h"
+#include "helper.h"
 #include "template.h"
 
 
@@ -88,7 +89,6 @@ static int			 parser_enumerate_tags(struct parser_state *);
 static struct tag_info		*parser_find_close_tag(struct tag_info *);
 static struct tag_info		*tag_info_new(char *, regmatch_t *);
 static void			 tag_info_free(struct tag_info *);
-static const char		*_get_rxerrormsg(int);
 
 // Tag handler functions:
 static char	*tmpl_handle_else(struct parser_state *, struct tag_info *);
@@ -108,18 +108,6 @@ static struct tag_strings tags[MAX__TAG] = {
 	{ UNLESS,  "TMPL_UNLESS",  11, tmpl_handle_if   },
 	{ VAR,     "TMPL_VAR",      8, tmpl_handle_var  },
 };
-
-
-
-
-
-const char *
-_get_rxerrormsg(int rc)
-{
-	static char errmsg[512];
-	regerror(rc, &_rx, errmsg, sizeof(errmsg));
-	return errmsg;
-}
 
 
 void
@@ -189,7 +177,7 @@ parser_init(void)
 		return;
 	int rc = regcomp(&_rx, TMPL_RX_PATTERN, REG_EXTENDED);
 	if (rc != 0)
-		errx(1, "regcomp: %s", _get_rxerrormsg(rc));
+		errx(1, "regcomp: %s", rx_get_errormsg(rc, &_rx));
 	_rx_initialized = true;
 }
 
@@ -280,7 +268,7 @@ parser_find_tmpl_tag(char *_start)
 			return _rx_group_array;
 			break;
 		default:
-			warnx("regexec: %s", _get_rxerrormsg(rc));
+			warnx("regexec: %s", rx_get_errormsg(rc, &_rx));
 			break;
 		}
 	}
