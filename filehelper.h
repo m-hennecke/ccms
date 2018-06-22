@@ -40,8 +40,11 @@ struct dir_entry	*dir_entry_new(const char *_filename);
 void	 		 dir_entry_free(struct dir_entry *);
 bool			 dir_entry_exists(const char *, struct dir_list *);
 struct dir_list		*get_dir_entries(const char *_directory);
+struct dir_list		*get_dir_entries_fd(int);
 void			 dir_list_free(struct dir_list *);
 
 bool			 file_exists(const char *_filename);
+bool			 dir_exists(const char *_dirname);
+bool			 dir_exists_at(int, const char *_dirname);
 
 #endif // _FILEHELPER_H_

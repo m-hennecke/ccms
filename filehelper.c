@@ -27,9 +27,9 @@
 #include "filehelper.h"
 
 struct dir_list *
-get_dir_entries(const char *_directory)
+get_dir_entries_fd(int _fd)
 {
-	DIR *dir = opendir(_directory);
+	DIR *dir = fdopendir(_fd);
 	if (dir) {
 		struct dir_list *list = malloc(sizeof(struct dir_list));
 		if (list == NULL)
@@ -37,11 +37,11 @@ get_dir_entries(const char *_directory)
 		int cwd = open(".", O_DIRECTORY | O_RDONLY);
 		if (cwd == -1)
 			err(1, NULL);
-		if (chdir(_directory) == -1)
+		if (fchdir(_fd) == -1)
 			err(1, NULL);
 		TAILQ_INIT(&list->entries);
 		list->newest = 0;
-		list->path = strdup(_directory);
+		list->path = NULL;
 		struct dirent *dirent;
 		while ((dirent = readdir(dir)) != NULL) {
 			struct dir_entry *entry;
@@ -59,6 +59,20 @@ get_dir_entries(const char *_directory)
 		return list;
 	}
 	return NULL;
+}
+
+
+struct dir_list *
+get_dir_entries(const char *_directory)
+{
+	int fd = open(_directory, O_DIRECTORY | O_RDONLY);
+	if (-1 == fd)
+		err(1, NULL);
+	struct dir_list *res = get_dir_entries_fd(fd);
+	if (res)
+		res->path = strdup(_directory);
+	close(fd);
+	return res;
 }
 
 
@@ -117,4 +131,24 @@ file_exists(const char *_filename)
 	if (lstat(_filename, &sb) == -1)
 		return false;
 	return true;
+}
+
+
+bool
+dir_exists(const char *_dirname)
+{
+	struct stat sb;
+	if (lstat(_dirname, &sb) == -1)
+		return false;
+	return (sb.st_mode & S_IFDIR);
+}
+
+
+bool
+dir_exists_at(int _fd, const char *_dirname)
+{
+	struct stat sb;
+	if (fstatat(_fd, _dirname, &sb, 0) == -1)
+		return false;
+	return (sb.st_mode & S_IFDIR);
 }
