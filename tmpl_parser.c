@@ -175,7 +175,7 @@ parser_init(void)
 {
 	if (_rx_initialized)
 		return;
-	int rc = regcomp(&_rx, TMPL_RX_PATTERN, REG_EXTENDED);
+	int rc = regcomp(&_rx, TMPL_RX_PATTERN, REG_EXTENDED | REG_ICASE);
 	if (rc != 0)
 		errx(1, "regcomp: %s", rx_get_errormsg(rc, &_rx));
 	_rx_initialized = true;
