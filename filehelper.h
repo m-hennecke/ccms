@@ -36,11 +36,12 @@ struct dir_list {
 	char			*path;
 };
 
-struct dir_entry	*dir_entry_new(const char *_filename);
+struct dir_entry	*dir_entry_new(const char *);
 void	 		 dir_entry_free(struct dir_entry *);
 bool			 dir_entry_exists(const char *, struct dir_list *);
-struct dir_list		*get_dir_entries(const char *_directory);
+struct dir_list		*get_dir_entries(const char *);
 struct dir_list		*get_dir_entries_fd(int);
+struct dir_list		*get_dir_entries_at(int, const char *);
 void			 dir_list_free(struct dir_list *);
 
 bool			 file_exists(const char *_filename);

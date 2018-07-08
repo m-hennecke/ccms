@@ -71,7 +71,19 @@ get_dir_entries(const char *_directory)
 	struct dir_list *res = get_dir_entries_fd(fd);
 	if (res)
 		res->path = strdup(_directory);
-	close(fd);
+	return res;
+}
+
+
+struct dir_list *
+get_dir_entries_at(int _fd, const char *_directory)
+{
+	int fd = openat(_fd, _directory, O_DIRECTORY | O_RDONLY);
+	if (-1 == fd)
+		err(1, NULL);
+	struct dir_list *res = get_dir_entries_fd(fd);
+	if (res)
+		res->path = strdup(_directory);
 	return res;
 }
 
