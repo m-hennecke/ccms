@@ -124,6 +124,21 @@ tmpl_data_set_variable(struct tmpl_data *_data, const char *_name,
 
 
 void
+tmpl_data_move_variable(struct tmpl_data *_data, const char *_name,
+		char *_value)
+{
+	struct tmpl_var *var = tmpl_data_get_variable(_data, _name);
+	if (var == NULL) {
+		var = tmpl_var_new(_name);
+		TAILQ_INSERT_TAIL(&_data->variables, var, entry);
+	} else {
+		free(var->value);
+	}
+	var->value = _value;
+}
+
+
+void
 tmpl_data_set_variablen(struct tmpl_data *_data, const char *_name,
 		const char *_value, size_t _len)
 {

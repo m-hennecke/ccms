@@ -58,6 +58,8 @@ void			 tmpl_data_set_variable(struct tmpl_data *,
 				const char *, const char *);
 void			 tmpl_data_set_variablen(struct tmpl_data *,
 				const char *, const char *, size_t);
+void			 tmpl_data_move_variable(struct tmpl_data *,
+				const char *, char *);
 struct tmpl_loop	*tmpl_data_get_loop(struct tmpl_data *, const char *);
 struct tmpl_loop	*tmpl_data_add_loop(struct tmpl_data *, const char *);
 void			 tmpl_loop_free(struct tmpl_loop *);
