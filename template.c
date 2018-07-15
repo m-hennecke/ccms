@@ -176,6 +176,19 @@ tmpl_data_add_loop(struct tmpl_data *_data, const char *_name)
 
 
 void
+tmpl_data_set_loop(struct tmpl_data *_data, const char *_name,
+		struct tmpl_loop *_loop)
+{
+	struct tmpl_loop *loop = tmpl_data_get_loop(_data, _name);
+	if (loop) {
+		TAILQ_REMOVE(&_data->loops, loop, entry);
+		tmpl_loop_free(loop);
+	}
+	TAILQ_INSERT_TAIL(&_data->loops, _loop, entry);
+}
+
+
+void
 tmpl_loop_free(struct tmpl_loop *_loop)
 {
 	struct tmpl_data *data;
