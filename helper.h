@@ -27,6 +27,7 @@ const char	*rx_get_errormsg(int, regex_t *);
 struct memmap	*memmap_new(const char *);
 struct memmap	*memmap_new_at(int, const char *);
 void		 memmap_free(struct memmap *);
+int		 memmap_chomp(struct memmap *);
 
 
 #endif // __HELPER_H__

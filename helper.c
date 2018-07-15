@@ -16,6 +16,7 @@
 
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <ctype.h>
 #include <err.h>
 #include <fcntl.h>
 #include <stdlib.h>
@@ -68,10 +69,12 @@ struct memmap *
 memmap_new_at(int _fd, const char *_filename)
 {
 	int fd = openat(_fd, _filename, O_RDONLY);
-	if (-1 == fd)
-		err(1, NULL);
-	return _map_fd(fd);
+	if (-1 == fd) {
+		warn(NULL);
+		return NULL;
+	}
 
+	return _map_fd(fd);
 }
 
 
@@ -81,4 +84,19 @@ memmap_free(struct memmap *_map)
 	if (_map && _map->data)
 		munmap(_map->data, _map->size);
 	free(_map);
+}
+
+
+int
+memmap_chomp(struct memmap *_m)
+{
+	int chomp = 0;
+	if (_m && _m->data) {
+		while ((_m->size > 0)
+				&& !isprint(((char *)_m->data)[_m->size-1])) {
+			chomp++;
+			_m->size--;
+		}
+	}
+	return chomp;
 }
