@@ -54,7 +54,10 @@ void
 tmpl_var_set(struct tmpl_var *_var, const char *_value)
 {
 	free(_var->value);
-	_var->value = strdup(_value);
+	if (_value)
+		_var->value = strdup(_value);
+	else
+		_var->value = NULL;
 }
 
 
