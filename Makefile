@@ -4,7 +4,7 @@ PROG=		kcms
 SRCS=		kcms.c filehelper.c buffer.c sitemap.c template.c \
 		tmpl_parser.c helper.c
 
-SUBDIR=		sitemap
+SUBDIR=		sitemap cgienv
 
 LDADD+=		-lutil -lz
 LDSTATIC=	${STATIC}
