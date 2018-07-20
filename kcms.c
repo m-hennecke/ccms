@@ -9,6 +9,7 @@
 
 #include "buffer.h"
 #include "filehelper.h"
+#include "handler.h"
 #include "template.h"
 
 #ifndef CMS_CONTENT_DIR
@@ -25,7 +26,7 @@ usage(void)
 {
 	extern char *__progname;
 
-	fprintf(stderr, "usage: %s -f file\n", __progname);
+	fprintf(stderr, "usage: %s URI\n", __progname);
 	exit(1);
 }
 
@@ -33,54 +34,52 @@ usage(void)
 int
 main(int argc, char **argv)
 {
-	int ch, fd = -1;
-
-	while ((ch = getopt(argc, argv, "f:h")) != -1) {
-		switch (ch) {
-		case 'f':
-			if ((fd = open(optarg, O_RDONLY, 0)) == -1)
-				err(1, "%s", optarg);
-			break;
-		default:
-			usage();
-		}
-	}
-	argc -= optind;
-	argv += optind;
-
-	struct tmpl_data *data = tmpl_data_new();
-
-	if (-1 == fd)
+	if (argc > 2)
 		usage();
+	if (argc == 2) {
+		if (argv[1][0] == '\0' || argv[1][0] != '/')
+			errx(1, "Require absolute path as argument");
+		// XXX Substitude PATH_INFO env variable
+		setenv("PATH_INFO", argv[1], 1);
+	}
+	struct request *r = request_new(getenv("PATH_INFO"));
+	request_parse_lang_pref(r);
 
-	struct stat sb;
-	if (-1 == fstat(fd, &sb))
-		err(1, NULL);
-	void *tmpl = mmap(NULL, sb.st_size, PROT_READ, MAP_SHARED, fd, 0);
-	if (NULL == tmpl)
-		err(1, NULL);
+	struct page_info *page = fetch_page(r);
+	r->page_info = page;
 
-	tmpl_data_set_variable(data, "LANGUAGE", "de");
-	tmpl_data_set_variable(data, "TITLE", "Template-Test");
-	struct tmpl_loop *language_links = tmpl_data_add_loop(
-			data, "LANGUAGE_LINKS"
-		);
+	if (NULL == page)
+		errx(1, "Unable to fetch page %s", getenv("PATH_INFO"));
 
 	struct tmpl_data *d = tmpl_data_new();
-	tmpl_data_set_variable(d, "LANGUAGE_LINK",
-			"<a href=\"de-page.html\">de</a>");
-	tmpl_loop_add_data(language_links, d);
-	d = tmpl_data_new();
-	tmpl_data_set_variable(d, "LANGUAGE_LINK",
-			"<a href=\"en-page.html\">en</a>");
-	tmpl_loop_add_data(language_links, d);
+	if (page->content)
+		tmpl_data_set_variablen(d, "CONTENT", page->content->data,
+				page->content->size);
+	else
+		errx(1, "no CONTENT found");
+	if (page->descr)
+		tmpl_data_set_variablen(d, "DESCR", page->descr->data,
+				page->descr->size);
 
-	struct buffer_list *out = tmpl_parse((char *)tmpl, sb.st_size, data);
-	tmpl_data_free(data);
-	close(fd);
+	struct tmpl_loop *links = get_links(r);
+	struct tmpl_loop *lang_links = get_language_links(r);
+	if (links)
+		tmpl_data_set_loop(d, "LINK_LOOP", links);
+	if (lang_links)
+		tmpl_data_set_loop(d, "LANGUAGE_LINKS", lang_links);
+	struct memmap *tmpl_file = memmap_new_at(r->template_dir,
+			CMS_DEFAULT_TEMPLATE);
+	if (tmpl_file == NULL)
+		errx(1, "Unable to load template file %s",
+				CMS_DEFAULT_TEMPLATE);
+	struct buffer_list *out = tmpl_parse((char *)tmpl_file->data,
+			tmpl_file->size, d);
 
 	char *result = buffer_list_concat_string(out);
-	printf("%s", result);
+	// TODO: Print headers from struct request
+	printf("Content-type: application/xhtml+xml\r\n\r\n%s", result);
+	tmpl_data_free(d);
+	memmap_free(tmpl_file);
 
 	return 0;
 }
