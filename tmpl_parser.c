@@ -70,7 +70,7 @@ struct tag_strings {
 #define TMPL_RX_PATTERN "(<(TMPL_"					\
 	"(ELSE|"							\
 	"(IF|INCL|INCLUDE|LOOP|VAR|UNLESS)( +name=\"([^\"]+)\"))?)"	\
-	">)|(</TMPL_(IF|INCL|LOOP|VAR|UNLESS *>))"
+	">)|(</TMPL_(IF|LOOP|VAR|UNLESS *>))"
 #define TMPL_RX_MAX_GROUPS 10
 static regex_t _rx;
 static bool _rx_initialized = false;
@@ -425,6 +425,7 @@ tmpl_parse(const char *_tmpl, size_t _len, struct tmpl_data *_data)
 		case ELSE:
 		case VAR:
 		case INCL:
+		case INCLUDE:
 			break;
 		default:
 			closer = parser_find_close_tag(info);
