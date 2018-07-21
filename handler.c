@@ -286,8 +286,7 @@ fetch_page(struct request *_req)
 		err(1, NULL);
 	cwd = open(path, O_DIRECTORY | O_RDONLY);
 	if (-1 == cwd) {
-		warnx("%s", path);
-		warn(NULL);
+		warn("%s", path);
 		goto error_out;
 	}
 

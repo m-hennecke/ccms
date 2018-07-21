@@ -140,9 +140,9 @@ tag_info_new(char *_s, regmatch_t *_tag)
 
 	for (int i = 0; i < MAX__TAG; ++i) {
 		int r = strncmp(s, tags[i].id, tags[i].len);
-		if (r < 0)
+		if (r < 0) {
 			break;
-		else if (r == 0) {
+		} else if (r == 0) {
 			info = malloc(sizeof(struct tag_info));
 			if (NULL == info)
 				err(1, NULL);
@@ -161,9 +161,10 @@ tag_info_new(char *_s, regmatch_t *_tag)
 		}
 	}
 
-#ifdef DEBUG
+#if defined(DEBUG)
 	if (info && info->name)
-		printf("%s has name = %s\n", tags[info->type].id, info->name);
+		fprintf(stderr, "%s has name = %s\n", tags[info->type].id,
+				info->name);
 #endif
 
 	return info;
@@ -362,8 +363,9 @@ tmpl_handle_loop(struct parser_state *_p, struct tag_info *_info)
 	struct tmpl_loop *loop = tmpl_data_get_loop(_p->data, _info->name);
 	bool cond = !tmpl_loop_isempty(loop);
 
-#ifdef DEBUG
-	printf("loop %s is %sempty\n", _info->name, cond ? "not " : "");
+#if defined(DEBUG)
+	fprintf(stderr, "loop %s is %sempty\n", _info->name,
+			cond ? "not " : "");
 #endif
 	struct tag_info *closing_tag = _info->closing_tag;
 
@@ -413,8 +415,8 @@ tmpl_parse(const char *_tmpl, size_t _len, struct tmpl_data *_data)
 	// for the opening tag
 	TAILQ_FOREACH(info, &state->tags, entry) {
 		struct tag_info *closer;
-#ifdef DEBUG
-		printf("%s%s tag at %td\n", (info->close) ? "/" : "",
+#if defined(DEBUG)
+		fprintf(stderr, "%s%s tag at %td\n", (info->close) ? "/" : "",
 				tags[info->type].id,
 				(info->start - state->input));
 #endif
