@@ -55,15 +55,17 @@ main(int argc, char **argv)
 		errx(1, "Unable to fetch page %s", path_info);
 
 	struct tmpl_data *d = tmpl_data_new();
-	if (page->content)
-		tmpl_data_set_variablen(d, "CONTENT", page->content->data,
-				page->content->size);
-	else
-		errx(1, "no CONTENT found");
 	if (page->descr)
 		tmpl_data_set_variablen(d, "DESCR", page->descr->data,
 				page->descr->size);
 
+	if (page->content) {
+		struct buffer_list *content = tmpl_parse(page->content->data,
+				page->content->size, d);
+		tmpl_data_set_variable(d, "CONTENT",
+				buffer_list_concat_string(content));
+	} else
+		errx(1, "no CONTENT found");
 	struct tmpl_loop *links = get_links(r);
 	struct tmpl_loop *lang_links = get_language_links(r);
 	if (links)
