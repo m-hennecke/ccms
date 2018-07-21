@@ -37,19 +37,22 @@ main(int argc, char **argv)
 	if (argc > 2)
 		usage();
 	if (argc == 2) {
-		if (argv[1][0] == '\0' || argv[1][0] != '/')
+		if (argv[1][0] == '\0')
 			errx(1, "Require absolute path as argument");
 		// XXX Substitude PATH_INFO env variable
 		setenv("PATH_INFO", argv[1], 1);
 	}
-	struct request *r = request_new(getenv("PATH_INFO"));
+	char *path_info = getenv("PATH_INFO");
+	if (path_info == NULL)
+		path_info = "/home_" CMS_DEFAULT_LANGUAGE ".html";
+	struct request *r = request_new(path_info);
 	request_parse_lang_pref(r);
 
 	struct page_info *page = fetch_page(r);
 	r->page_info = page;
 
 	if (NULL == page)
-		errx(1, "Unable to fetch page %s", getenv("PATH_INFO"));
+		errx(1, "Unable to fetch page %s", path_info);
 
 	struct tmpl_data *d = tmpl_data_new();
 	if (page->content)

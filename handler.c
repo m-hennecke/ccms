@@ -29,7 +29,7 @@
 #include "helper.h"
 
 
-#define PAGE_URI_RX_PATTERN "/([A-Za-z0-9]+)_([a-z][a-z])\\.html$"
+#define PAGE_URI_RX_PATTERN "/?([A-Za-z0-9]+)_([a-z][a-z])\\.html$"
 #define PAGE_URI_MAX_GROUPS 3
 #define ACCEPT_LANGUAGE_RX_PATTERN "^ *([a-z]{1,8}(-[a-z]{1,8})?)" \
 	" *(; *q *= *(1|0\\.[0-9]+))?$"
