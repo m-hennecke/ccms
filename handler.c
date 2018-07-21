@@ -54,13 +54,11 @@ request_add_lang_pref(struct request *_req, struct lang_pref *_lang_pref)
 {
 	struct lang_pref *l = TAILQ_FIRST(&_req->accept_languages);
 	while (l) {
-		int cmp = strcmp(l->lang, _lang_pref->lang);
-		if (cmp > 0) {
+		if (_lang_pref->priority < l->priority) {
 			l = TAILQ_NEXT(l, entries);
-		} else if (cmp == 0) {
-			if (l->priority > _lang_pref->priority)
-				continue;
+			continue;
 		}
+
 		TAILQ_INSERT_BEFORE(l, _lang_pref, entries);
 		return;
 	}
@@ -224,7 +222,7 @@ request_new(char *_path_info)
 
 	// TODO: Need to set default language or from Accept-Language header
 	if (NULL == req->lang) {
-		req->lang = strndup(CMS_DEFAULT_LANGUAGE, 5);
+		req->lang = strndup(CMS_DEFAULT_LANGUAGE, sizeof(req->lang)-1);
 	}
 	req->lang_dir = openat(req->content_dir, req->lang,
 			O_DIRECTORY | O_RDONLY);
