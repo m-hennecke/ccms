@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "buffer.h"
 #include "helper.h"
@@ -347,8 +348,10 @@ char *
 tmpl_handle_incl(struct parser_state *_p, struct tag_info *_info)
 {
 	struct buffer_list *block = tmpl_parse_file(_info->name, _p->data);
-	buffer_list_add_list(_p->output, block);
-	buffer_list_free(block);
+	if (block) {
+		buffer_list_add_list(_p->output, block);
+		buffer_list_free(block);
+	}
 	return _info->end;
 }
 
@@ -462,13 +465,18 @@ tmpl_parse_file(const char *_filename, struct tmpl_data *_data)
 {
 	struct stat sb;
 	int fd = open(_filename, O_RDONLY);
-	if (-1 == fd)
-		err(1, NULL);
-	if (-1 == fstat(fd, &sb))
-		err(1, NULL);
+	if (-1 == fd) {
+		warn("%s", _filename);
+		return NULL;
+	}
+	if (-1 == fstat(fd, &sb)) {
+		warn("%s", _filename);
+		return NULL;
+	}
 	if (sb.st_size == 0)
 		return NULL;
 	void *tmpl = mmap(NULL, sb.st_size, PROT_READ, MAP_SHARED, fd, 0);
+	close(fd);
 	if (NULL == tmpl)
 		err(1, NULL);
 
