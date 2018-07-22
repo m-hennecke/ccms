@@ -24,6 +24,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "buffer.h"
 #include "filehelper.h"
 #include "handler.h"
 #include "helper.h"
@@ -166,7 +167,7 @@ request_new(char *_path_info)
 	size_t match_len;
 	regmatch_t *rxmatch;
 
-	struct request *req = malloc(sizeof(struct request));
+	struct request *req = calloc(1, sizeof(struct request));
 	if (req == NULL)
 		err(1, NULL);
 
@@ -369,4 +370,20 @@ request_add_header(struct request *_req, const char *_key, const char *_value)
 {
 	struct header *h = header_new(_key, _value);
 	TAILQ_INSERT_TAIL(&_req->headers, h, entries);
+}
+
+
+struct buffer_list *
+request_output_headers(struct request *_req)
+{
+	struct header *h;
+	struct buffer_list *bl = buffer_list_new();
+	TAILQ_FOREACH(h, &_req->headers, entries) {
+		char *header;
+		if ((asprintf(&header, "%s: %s\n", h->key, h->value) == -1))
+			err(1, NULL);
+		buffer_list_add_string(bl, header);
+		free(header);
+	}
+	return bl;
 }

@@ -99,6 +99,7 @@ struct header		*header_new(const char *, const char *);
 void			 header_free(struct header *);
 void			 request_add_header(struct request *, const char *,
 		const char *);
+struct buffer_list *	 request_output_headers(struct request *);
 
 struct tmpl_loop	*get_language_links(struct request *);
 struct tmpl_loop	*get_links(struct request *);
