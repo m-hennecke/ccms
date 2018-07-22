@@ -89,6 +89,9 @@ tmpl_data_free(struct tmpl_data *_data)
 	struct tmpl_var *var;
 	struct tmpl_loop *loop;
 
+	if (_data == NULL)
+		return;
+
 	while ((var = TAILQ_FIRST(&_data->variables))) {
 		TAILQ_REMOVE(&_data->variables, var, entry);
 		tmpl_var_free(var);
