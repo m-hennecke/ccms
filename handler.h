@@ -104,4 +104,6 @@ struct buffer_list *	 request_output_headers(struct request *);
 struct tmpl_loop	*get_language_links(struct request *);
 struct tmpl_loop	*get_links(struct request *);
 
+__dead void		 _error(const char *, const char *);
+
 #endif

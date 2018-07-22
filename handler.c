@@ -229,7 +229,8 @@ request_new(char *_path_info)
 			O_DIRECTORY | O_RDONLY);
 
 	if (req->lang_dir == -1) {
-		errx(1, "Unable to open language directory");
+		request_free(req);
+		_error("404 Not Found", NULL);
 	}
 
 	return req;
@@ -386,4 +387,16 @@ request_output_headers(struct request *_req)
 		free(header);
 	}
 	return bl;
+}
+
+
+__dead void
+_error(const char *_status, const char *_content)
+{
+	fprintf(stdout, "Status: %s\r\n", _status);
+	fprintf(stdout, "Content-Length: %zd\r\n\r\n",
+			_content ? strlen(_content) : 0);
+	if (_content)
+		fprintf(stdout, "%s", _content);
+	exit(0);
 }
