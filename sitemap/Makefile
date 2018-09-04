@@ -5,9 +5,8 @@
 PROG=		sitemap
 SRCS=		sitemap_cgi.c filehelper.c buffer.c sitemap.c
 
-CFLAGS+=	-I.. -I/usr/local/include
-LDADD+=		-L/usr/local/lib
-LDADD+=		-lutil -lkcgi -lz
+CFLAGS+=	-I..
+LDADD+=		-lutil -lz
 LDSTATIC=	${STATIC}
 NOMAN=		1
 

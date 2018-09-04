@@ -27,7 +27,7 @@ usage(void)
 {
 	extern char *__progname;
 
-	fprintf(stderr, "usage: %s URI\n", __progname);
+	dprintf(STDERR_FILENO, "usage: %s URI\n", __progname);
 	exit(1);
 }
 
@@ -50,8 +50,10 @@ main(int argc, char **argv)
 		setenv("PATH_INFO", argv[1], 1);
 	}
 	char *path_info = getenv("PATH_INFO");
-	if (path_info == NULL)
-		path_info = "/home_" CMS_DEFAULT_LANGUAGE ".html";
+	if (path_info == NULL || strlen(path_info) == 0
+			|| strcmp(path_info, "index.html") == 0
+			|| strcmp(path_info, "/index.html") == 0)
+		path_info = "/home.html";
 	r = request_new(path_info);
 	if (r == NULL)
 		_error("404 Not Found", NULL);
@@ -97,7 +99,7 @@ main(int argc, char **argv)
 not_found:
 	hb = request_output_headers(r);
 	char *header = buffer_list_concat_string(hb);
-	fprintf(stdout, "%s\r\n%s", header, result);
+	dprintf(STDOUT_FILENO, "%s\r\n%s", header, result);
 	tmpl_data_free(d);
 	memmap_free(tmpl_file);
 

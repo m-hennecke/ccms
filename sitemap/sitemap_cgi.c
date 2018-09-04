@@ -21,7 +21,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <kcgi.h>
+#include <unistd.h>
+
 
 #include "filehelper.h"
 #include "sitemap.h"
@@ -41,8 +42,8 @@ enum page {
 
 
 const char *const pages[PAGE__MAX] = {
-	"sitemap", /* PAGE_SITEMAP */
-	"sitemap.xml.gz", /* PAGE_SITEMAP_GZ */
+	"/sitemap.xml",    /* PAGE_SITEMAP */
+	"/sitemap.xml.gz", /* PAGE_SITEMAP_GZ */
 };
 
 
@@ -50,34 +51,40 @@ int
 main(void)
 {
 	size_t size;
-	struct kreq r;
 	char *out;
+	size_t page = PAGE__MAX;
+	int fd = STDOUT_FILENO;
 
-	if (KCGI_OK != khttp_parse(&r, NULL, 0, pages, PAGE__MAX, PAGE_SITEMAP))
-		return EXIT_FAILURE;
+	char *path_info = getenv("PATH_INFO");
+	if (path_info == NULL || strlen(path_info) == 0) {
+		page = 0;
+	} else {
+		for (page = 0; page < PAGE__MAX; ++page)
+			if (strcmp(pages[page], path_info) == 0)
+				break;
+	}
 
 	struct sitemap *sitemap = sitemap_new(CMS_CONTENT_DIR, CMS_HOSTNAME);
 	uint32_t mtime = sitemap_newest(sitemap, NULL);
 
-	switch (r.page) {
+	switch (page) {
+	default:
 	case PAGE_SITEMAP:
 		out = sitemap_toxml(sitemap);
 		size = strlen(out);
 		break;
 	case PAGE_SITEMAP_GZ:
-	default:
 		out = sitemap_toxmlgz(sitemap, &size, "sitemap.xml", mtime);
 		break;
 	}
 
-	khttp_head(&r, kresps[KRESP_STATUS], "%s", khttps[KHTTP_200]);
-	khttp_head(&r, kresps[KRESP_CONTENT_TYPE], "%s", "application/xml");
-	if (r.page == PAGE_SITEMAP_GZ)
-		khttp_head(&r, kresps[KRESP_CONTENT_ENCODING], "%s", "x-gzip");
-
-	khttp_body(&r);
-	khttp_write(&r, out, size);
-	khttp_free(&r);
+	dprintf(fd, "Status: 200 OK\r\n");
+	dprintf(fd, "Content-length: %zu\r\n", size);
+	dprintf(fd, "Content-type: application/xml\r\n");
+	if (page == PAGE_SITEMAP_GZ)
+		dprintf(fd, "Content-encoding: x-gzip\r\n");
+	dprintf(fd, "\r\n");
+	write(fd, out, size);
 
 	free(out);
 	return EXIT_SUCCESS;

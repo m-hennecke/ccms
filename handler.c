@@ -29,13 +29,15 @@
 #include "handler.h"
 #include "helper.h"
 
+#define PAGE_URI_RX_PATTERN "/?([a-z]{1,8}(-[a-z]{1,8})?/)?" \
+	"([_a-z0-9-]+)\\.html$"
+#define PAGE_URI_MAX_GROUPS 4
+#define PAGE_URI_LANG_GROUP 1
+#define PAGE_URI_PAGE_GROUP 3
 
-#define PAGE_URI_RX_PATTERN "/?([_a-z0-9]+)_([a-z][a-z])\\.html$"
-#define PAGE_URI_MAX_GROUPS 3
 #define ACCEPT_LANGUAGE_RX_PATTERN "^ *([a-z]{1,8}(-[a-z]{1,8})?)" \
 	" *(; *q *= *(1|0\\.[0-9]+))?$"
 #define ACCEPT_LANGUAGE_MAX_GROUPS 5
-
 
 struct lang_pref *
 lang_pref_new(const char *_lang, const float _prio)
@@ -206,13 +208,15 @@ request_new(char *_path_info)
 		request_free(req);
 		return NULL;
 	case 0:
-		rxmatch = &rx_group_array[1];
+		rxmatch = &rx_group_array[PAGE_URI_PAGE_GROUP];
 		match_len = rxmatch->rm_eo - rxmatch->rm_so;
 		req->page = strndup(_path_info + rxmatch->rm_so, match_len);
-		rxmatch = &rx_group_array[2];
+		rxmatch = &rx_group_array[PAGE_URI_LANG_GROUP];
 		match_len = rxmatch->rm_eo - rxmatch->rm_so;
-		req->lang = strndup(_path_info + rxmatch->rm_so, match_len);
-
+		if (match_len > 0) {
+			req->lang = strndup(_path_info + rxmatch->rm_so,
+					match_len);
+		}
 		break;
 	default:
 		warnx("regexec: %s", rx_get_errormsg(rc, &rx));
@@ -393,10 +397,10 @@ request_output_headers(struct request *_req)
 __dead void
 _error(const char *_status, const char *_content)
 {
-	fprintf(stdout, "Status: %s\r\n", _status);
-	fprintf(stdout, "Content-Length: %zd\r\n\r\n",
+	dprintf(STDOUT_FILENO, "Status: %s\r\n", _status);
+	dprintf(STDOUT_FILENO, "Content-Length: %zd\r\n\r\n",
 			_content ? strlen(_content) : 0);
 	if (_content)
-		fprintf(stdout, "%s", _content);
+		dprintf(STDOUT_FILENO, "%s", _content);
 	exit(0);
 }

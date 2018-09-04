@@ -220,8 +220,8 @@ _link_get_tmpl_data(struct _link *_l, struct request *_req, bool _js)
 {
 	char *linkdata = strndup(_l->link->data, _l->link->size);
 	char *aref, *jslink, *link;
-	if ((asprintf(&link, "%s%s_%s.html", _req->path, _l->linkname,
-					_req->lang) == -1))
+	if ((asprintf(&link, "%s%s/%s.html", _req->path, _req->lang,
+					_l->linkname) == -1))
 		err(1, NULL);
 	if ((asprintf(&aref, "<a href=\"%s%s\">%s</a>",
 					(_l->ssl || _req->page_info->ssl)
@@ -298,13 +298,13 @@ get_language_links(struct request *_req)
 			if (dir_exists_at(fd, _req->page)) {
 				char *lang_link;
 				if ((asprintf(&lang_link,
-						"<a href=\"%s%s_%s.html\">"
+						"<a href=\"%s%s/%s.html\">"
 						"<img src=\""
 						CMS_CONFIG_URL_IMAGES
 						"flag_%s.png\" alt=\"%s\"/>"
 						"</a>",
-						_req->path, _req->page,
-						dirent->d_name, dirent->d_name,
+						_req->path, dirent->d_name,
+						_req->page, dirent->d_name,
 						dirent->d_name) == -1))
 					err(1, NULL);
 				struct tmpl_data *d = tmpl_data_new();
