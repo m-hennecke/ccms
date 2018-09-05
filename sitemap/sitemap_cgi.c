@@ -46,14 +46,34 @@ const char *const pages[PAGE__MAX] = {
 	"/sitemap.xml.gz", /* PAGE_SITEMAP_GZ */
 };
 
+static __dead void	usage(void);
+
+__dead void
+usage(void)
+{
+	extern char *__progname;
+
+	dprintf(STDERR_FILENO, "usage: %s CMS_ROOT\n", __progname);
+	exit(1);
+}
+
 
 int
-main(void)
+main(int argc, char **argv)
 {
 	size_t size;
 	char *out;
 	size_t page = PAGE__MAX;
 	int fd = STDOUT_FILENO;
+	char *cms_root = CMS_CONTENT_DIR;
+
+	if (argc > 2)
+		usage();
+	if (argc == 2) {
+		if (argv[1][0] == '\0')
+			errx(1, "Require abolute path as argument");
+		cms_root = argv[1];
+	}
 
 	char *path_info = getenv("PATH_INFO");
 	if (path_info == NULL || strlen(path_info) == 0) {
@@ -64,7 +84,7 @@ main(void)
 				break;
 	}
 
-	struct sitemap *sitemap = sitemap_new(CMS_CONTENT_DIR, CMS_HOSTNAME);
+	struct sitemap *sitemap = sitemap_new(cms_root, CMS_HOSTNAME);
 	uint32_t mtime = sitemap_newest(sitemap, NULL);
 
 	switch (page) {
