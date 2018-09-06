@@ -57,7 +57,6 @@ main(int argc, char **argv)
 	r = request_new(path_info);
 	if (r == NULL)
 		_error("404 Not Found", NULL);
-	request_parse_lang_pref(r);
 
 	struct page_info *page = fetch_page(r);
 	if (page == NULL)

@@ -48,6 +48,8 @@ lang_pref_new(const char *_lang, const float _prio)
 
 	strlcpy(lp->lang, _lang, sizeof(lp->lang));
 	lp->priority = _prio;
+	strlcpy(lp->short_lang, _lang, sizeof(lp->short_lang));
+	strtok(lp->short_lang, "-");
 	return lp;
 }
 
@@ -115,7 +117,24 @@ request_parse_lang_pref(struct request *_req)
 			match_len = pmatch[1].rm_eo - pmatch[1].rm_so;
 			lang = strndup(it + pmatch[1].rm_so, match_len);
 			struct lang_pref *lp = lang_pref_new(lang, prio);
-			request_add_lang_pref(_req, lp);
+			// Only store available languages
+			bool store = false;
+			if (dir_entry_exists(lp->lang, _req->avail_languages)) {
+				store = true;
+			} else {
+				lp->lang[0] = '\0';
+			}
+			if (dir_entry_exists(lp->short_lang,
+						_req->avail_languages)) {
+				store = true;
+			} else {
+				lp->short_lang[0] = '\0';
+			}
+			if (store) {
+				request_add_lang_pref(_req, lp);
+			} else {
+				free(lp);
+			}
 			free(lang);
 
 			break;
@@ -225,9 +244,20 @@ request_new(char *_path_info)
 
 	regfree(&rx);
 
-	// TODO: Need to set default language or from Accept-Language header
+	req->avail_languages = get_dir_entries(CMS_CONTENT_DIR);
+	request_parse_lang_pref(req);
+
 	if (NULL == req->lang) {
-		req->lang = strndup(CMS_DEFAULT_LANGUAGE, sizeof(req->lang)-1);
+		struct lang_pref *lang = TAILQ_FIRST(&req->accept_languages);
+		if (lang == NULL) {
+			req->lang = strndup(CMS_DEFAULT_LANGUAGE,
+					sizeof(req->lang) - 1);
+		} else {
+			if (lang->lang[0] != '\0')
+				req->lang = strdup(lang->lang);
+			else
+				req->lang = strdup(lang->short_lang);
+		}
 	}
 	req->lang_dir = openat(req->content_dir, req->lang,
 			O_DIRECTORY | O_RDONLY);
@@ -274,6 +304,7 @@ request_free(struct request *_req)
 			TAILQ_REMOVE(&_req->accept_languages, lp, entries);
 			free(lp);
 		}
+		dir_list_free(_req->avail_languages);
 	}
 }
 

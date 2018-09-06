@@ -40,8 +40,9 @@ struct page_info {
 
 struct lang_pref {
 	TAILQ_ENTRY(lang_pref)	entries;
-	char			lang[18];
 	float			priority;
+	char			lang[18];
+	char			short_lang[9];
 };
 
 
@@ -71,6 +72,8 @@ struct request {
 
 	TAILQ_HEAD(, header)	 headers;
 	TAILQ_HEAD(, lang_pref)	 accept_languages;
+
+	struct dir_list		*avail_languages;
 };
 
 
