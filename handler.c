@@ -29,11 +29,11 @@
 #include "handler.h"
 #include "helper.h"
 
-#define PAGE_URI_RX_PATTERN "/?(([a-z]{1,8}(-[a-z]{1,8})?)/)?" \
+#define PAGE_URI_RX_PATTERN "/?((([a-z]{1,8}(-[a-z]{1,8})?))/)?" \
 	"([_a-z0-9-]+)\\.html$"
-#define PAGE_URI_MAX_GROUPS 5
-#define PAGE_URI_LANG_GROUP 1
-#define PAGE_URI_PAGE_GROUP 4
+#define PAGE_URI_MAX_GROUPS 6
+#define PAGE_URI_LANG_GROUP 2
+#define PAGE_URI_PAGE_GROUP 5
 
 #define ACCEPT_LANGUAGE_RX_PATTERN "^ *([a-z]{1,8}(-[a-z]{1,8})?)" \
 	" *(; *q *= *(1|0\\.[0-9]+))?$"
