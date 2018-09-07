@@ -192,11 +192,11 @@ request_new(char *_path_info)
 	if (req == NULL)
 		err(1, NULL);
 
-	req->content_dir = open(CMS_CONTENT_DIR, O_DIRECTORY | O_RDONLY);
+	req->content_dir = open(cms_content_dir, O_DIRECTORY | O_RDONLY);
 	if (-1 == req->content_dir)
 		err(1, NULL);
 
-	req->template_dir = open(CMS_TEMPLATE_DIR, O_DIRECTORY | O_RDONLY);
+	req->template_dir = open(cms_template_dir, O_DIRECTORY | O_RDONLY);
 	if (-1 == req->template_dir)
 		err(1, NULL);
 	req->page_dir = -1;
@@ -244,7 +244,7 @@ request_new(char *_path_info)
 
 	regfree(&rx);
 
-	req->avail_languages = get_dir_entries(CMS_CONTENT_DIR);
+	req->avail_languages = get_dir_entries(cms_content_dir);
 	request_parse_lang_pref(req);
 
 	if (NULL == req->lang) {
@@ -318,7 +318,7 @@ fetch_page(struct request *_req)
 	int cwd = -1;
 	char *path;
 
-	if (-1 == asprintf(&path, "%s/%s/%s", CMS_CONTENT_DIR, _req->lang,
+	if (-1 == asprintf(&path, "%s/%s/%s", cms_content_dir, _req->lang,
 				_req->page))
 		err(1, NULL);
 	cwd = open(path, O_DIRECTORY | O_RDONLY);

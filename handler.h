@@ -23,6 +23,9 @@
 #include "helper.h"
 #include "template.h"
 
+extern char *cms_content_dir;
+extern char *cms_template_dir;
+
 struct page_info {
 	char		*path;
 

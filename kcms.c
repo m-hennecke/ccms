@@ -20,6 +20,9 @@
 #error "Need CMS_HOSTNAME defined to compile"
 #endif
 
+char *cms_content_dir  = CMS_CONTENT_DIR;
+char *cms_template_dir = CMS_TEMPLATE_DIR;
+
 static __dead void	usage(void);
 
 __dead void
@@ -43,7 +46,9 @@ main(int argc, char **argv)
 
 	if (argc > 2)
 		usage();
-	if (argc == 2) {
+	if (argc >= 2) {
+		cms_content_dir  = CMS_CHROOT CMS_CONTENT_DIR;
+		cms_template_dir = CMS_CHROOT CMS_TEMPLATE_DIR;
 		if (argv[1][0] == '\0')
 			errx(1, "Require absolute path as argument");
 		// XXX Substitude PATH_INFO env variable
