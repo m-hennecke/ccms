@@ -14,8 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _BUFFER_H_
-#define _BUFFER_H_
+#ifndef __BUFFER_H__
+#define __BUFFER_H__
 
 #include <sys/queue.h>
 
@@ -56,4 +56,4 @@ struct buffer_list	*buffer_list_gzip(struct buffer_list *,
 
 
 
-#endif // _BUFFER_H_
+#endif // __BUFFER_H__

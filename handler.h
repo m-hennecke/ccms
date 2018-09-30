@@ -14,8 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _hander_h_
-#define _hander_h_
+#ifndef __HANDLER_H__
+#define __HANDLER_H__
 
 #include <sys/queue.h>
 #include <stdbool.h>
@@ -112,4 +112,4 @@ struct tmpl_loop	*get_links(struct request *);
 
 __dead void		 _error(const char *, const char *);
 
-#endif
+#endif // __HANDLER_H__

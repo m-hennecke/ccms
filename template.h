@@ -14,8 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _TEMPLATE_H_
-#define _TEMPLATE_H_
+#ifndef __TEMPLATE_H__
+#define __TEMPLATE_H__
 
 #include <sys/queue.h>
 #include <stdbool.h>
@@ -74,4 +74,4 @@ struct buffer_list	*tmpl_parse(const char *, size_t _len,
 				struct tmpl_data *);
 struct buffer_list	*tmpl_parse_file(const char *, struct tmpl_data *);
 
-#endif // _TEMPLATE_H_
+#endif // __TEMPLATE_H__

@@ -14,8 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _SITEMAP_H_
-#define _SITEMAP_H_
+#ifndef __SITEMAP_H__
+#define __SITEMAP_H__
 
 #include <sys/queue.h>
 
@@ -51,4 +51,4 @@ char			*sitemap_toxmlgz(struct sitemap *, size_t *,
 uint32_t		 sitemap_newest(struct sitemap *, const char *_lang);
 
 
-#endif // _SITEMAP_H_
+#endif //__SITEMAP_H__

@@ -14,8 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef _FILEHELPER_H_
-#define _FILEHELPER_H_
+#ifndef __FILEHELPER_H__
+#define __FILEHELPER_H__
 
 #include <sys/queue.h>
 #include <sys/stat.h>
@@ -48,4 +48,4 @@ bool			 file_exists(const char *_filename);
 bool			 dir_exists(const char *_dirname);
 bool			 dir_exists_at(int, const char *_dirname);
 
-#endif // _FILEHELPER_H_
+#endif // __FILEHELPER_H__
