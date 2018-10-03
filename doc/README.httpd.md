@@ -33,6 +33,9 @@ server "example.com" {
 	location "/*.html" {
 		request rewrite "/cgi-bin/cms$REQUEST_URI"
 	}
+	location "/" {
+		request rewrite "/cgi-bin/cms"
+	}
 }
 
 
