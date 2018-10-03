@@ -31,7 +31,7 @@ server "example.com" {
 		root "/"
 	}
 	location "/*.html" {
-		request rewrite "/cgi-bin/kcms$REQUEST_URI"
+		request rewrite "/cgi-bin/cms$REQUEST_URI"
 	}
 }
 

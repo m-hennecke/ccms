@@ -5,7 +5,7 @@
 *.o
 
 # Programs
-kcms
+cms
 sitemap/sitemap
 cgienv/cgienv
 
