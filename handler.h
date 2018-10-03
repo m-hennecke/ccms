@@ -21,10 +21,14 @@
 #include <stdbool.h>
 
 #include "helper.h"
+#include "htpasswd.h"
+#include "session.h"
 #include "template.h"
 
 extern char *cms_content_dir;
 extern char *cms_template_dir;
+extern char *cms_session_db;
+extern char *cms_session_htpasswd;
 
 struct page_info {
 	char		*path;
@@ -32,6 +36,7 @@ struct page_info {
 	struct memmap	*content;
 	struct memmap	*descr;
 	struct memmap	*link;
+	struct memmap	*login;
 	struct memmap	*sort;
 	struct memmap	*style;
 	struct memmap	*script;
@@ -56,6 +61,28 @@ struct header {
 };
 
 
+struct param {
+	TAILQ_ENTRY(param)	 entries;
+	char			*name;
+	char			*value;
+};
+
+
+struct cookie {
+	TAILQ_ENTRY(cookie)	 entries;
+	char			*name;
+	char			*value;
+	char			*path;
+	char			*domain;
+	time_t			 expires;
+};
+
+
+enum request_method {
+	GET = 0, POST, INVALID
+};
+
+
 struct request {
 	int			 content_dir;
 	int			 lang_dir;
@@ -69,14 +96,28 @@ struct request {
 
 	struct page_info	*page_info;
 	struct tmpl_data	*data;
+	struct memmap		*content;
+
+	struct memmap		*tmpl_file;
 
 	int			 status_code;
+	int			 request_method;
 	char			*status;
 
 	TAILQ_HEAD(, header)	 headers;
 	TAILQ_HEAD(, lang_pref)	 accept_languages;
+	TAILQ_HEAD(, cookie)	 cookies;
+	TAILQ_HEAD(, param)	 params;
 
 	struct dir_list		*avail_languages;
+
+	struct session		*session;
+	struct session_store	*session_store;
+
+	struct htpasswd		*htpasswd;
+
+	void			*req_body;
+	size_t			 req_body_size;
 };
 
 
@@ -92,7 +133,7 @@ struct page_info	*page_info_new(char *_path);
 void			 page_info_free(struct page_info *);
 
 
-struct page_info	*fetch_page(struct request *);
+struct page_info	*request_fetch_page(struct request *);
 struct tmpl_loop	*fetch_language_links(struct request *);
 struct tmpl_loop	*fetch_links(struct request *);
 
@@ -107,8 +148,31 @@ void			 request_add_header(struct request *, const char *,
 		const char *);
 struct buffer_list *	 request_output_headers(struct request *);
 
-struct tmpl_loop	*get_language_links(struct request *);
-struct tmpl_loop	*get_links(struct request *);
+struct cookie		*cookie_new(const char *, const char *);
+void			 cookie_free(struct cookie *);
+void			 request_cookie_mark_delete(struct request *,
+		struct cookie *);
+bool			 request_cookie_remove(struct request *,
+		struct cookie *);
+void			 request_cookie_set(struct request *, struct cookie *);
+struct cookie *		 request_cookie_get(struct request *, const char *);
+
+void			 request_parse_cookies(struct request *);
+
+struct tmpl_data	*request_init_tmpl_data(struct request *);
+struct tmpl_loop	*request_get_language_links(struct request *);
+struct tmpl_loop	*request_get_links(struct request *);
+
+struct param		*param_new(const char *, const char *);
+void			 param_free(struct param *);
+void			 param_decode(struct param *);
+
+void			 request_parse_params(struct request *, const char *);
+struct param		*request_get_param(struct request *, const char *,
+		struct param *);
+bool			 request_read_post_body(struct request *);
+bool			 request_handle_login(struct request *);
+struct buffer_list	*request_render_page(struct request *, const char *);
 
 __dead void		 _error(const char *, const char *);
 

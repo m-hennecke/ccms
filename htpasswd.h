@@ -13,24 +13,28 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-#ifndef __HELPER_H__
-#define __HELPER_H__
 
-#include <regex.h>
+#ifndef __HTPASSWD_H__
+#define __HTPASSWD_H__
 
-struct memmap {
-	void	*data;
-	size_t	 size;
+#include <stdbool.h>
+
+
+#define MAX_HTPASSWD_ENTRIES	128
+
+struct htpasswd {
+	size_t		 filesize;
+	char		*htpasswd;
+	char		*usernames[MAX_HTPASSWD_ENTRIES];
+	char		*hashes[MAX_HTPASSWD_ENTRIES];
 };
 
-const char	*rx_get_errormsg(int, regex_t *);
-
-void		 decode_string(char *);
-
-struct memmap	*memmap_new(const char *);
-struct memmap	*memmap_new_at(int, const char *);
-void		 memmap_free(struct memmap *);
-int		 memmap_chomp(struct memmap *);
 
 
-#endif // __HELPER_H__
+struct htpasswd	*htpasswd_init(const char *);
+struct htpasswd	*htpasswd_init_at(int, const char *);
+void		 htpasswd_free(struct htpasswd *);
+bool		 htpasswd_check_password(struct htpasswd *, const char *,
+		const char *);
+
+#endif // __HTPASSWD_H__

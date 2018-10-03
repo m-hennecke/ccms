@@ -2,7 +2,8 @@
 
 PROG=		kcms
 SRCS=		kcms.c filehelper.c buffer.c sitemap.c template.c \
-		tmpl_parser.c helper.c handler.c linklist.c
+		tmpl_parser.c helper.c handler.c linklist.c session.c \
+		htpasswd.c
 
 SUBDIR=		sitemap cgienv
 

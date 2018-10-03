@@ -19,12 +19,16 @@
 #include <ctype.h>
 #include <err.h>
 #include <fcntl.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <unistd.h>
 
 #include "helper.h"
 
-static struct memmap *_map_fd(int);
+static struct memmap	*_map_fd(int);
+static char		 decode_hexdigit(const char *);
+static bool		 ishexdigit(const int);
+
 
 
 const char *
@@ -58,8 +62,10 @@ struct memmap *
 memmap_new(const char *_filename)
 {
 	int fd = open(_filename, O_RDONLY);
-	if (-1 == fd)
-		err(1, NULL);
+	if (-1 == fd) {
+		warn(NULL);
+		return NULL;
+	}
 
 	return _map_fd(fd);
 }
@@ -99,4 +105,57 @@ memmap_chomp(struct memmap *_m)
 		}
 	}
 	return chomp;
+}
+
+
+bool
+ishexdigit(const int _c)
+{
+	int c = tolower(_c);
+	return (isdigit(c) || ((c >= 'a') && (c <= 'f')));
+}
+
+
+char
+decode_hexdigit(const char *_s)
+{
+	_s++;
+	int highnibble = tolower(*_s++);
+	if (isdigit(highnibble))
+		highnibble -= '0';
+	else
+		highnibble -= 'a';
+	int lownibble = tolower(*_s);
+	if (isdigit(lownibble))
+		lownibble -= '0';
+	else
+		lownibble -= 'a';
+	return ((highnibble << 4) | (lownibble));
+}
+
+
+void
+decode_string(char *_s)
+{
+	if (_s == NULL)
+		return;
+
+	char *s = _s;
+	char *d = s;
+	while (s != '\0') {
+		if (*s == '+') {
+			*d = ' ';
+		} else {
+			if (*s == '%' && s[1] != '\0' && ishexdigit(s[1])
+					&& s[2] != '\0' && ishexdigit(s[2])) {
+				*d = decode_hexdigit(s);
+				s += 2;
+			} else {
+				*d = *s;
+			}
+		}
+		s++;
+		d++;
+	}
+	*d = *s;
 }

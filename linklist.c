@@ -254,7 +254,7 @@ _link_get_tmpl_data(struct _link *_l, struct request *_req, bool _js)
 
 
 struct tmpl_loop *
-get_links(struct request *_req)
+request_get_links(struct request *_req)
 {
 	struct _link_list *lst = _link_list_new_at(_req->lang_dir, _req->page);
 	if (lst == NULL)
@@ -277,7 +277,7 @@ get_links(struct request *_req)
 
 
 struct tmpl_loop *
-get_language_links(struct request *_req)
+request_get_language_links(struct request *_req)
 {
 	struct tmpl_loop *loop = tmpl_loop_new("LANGUAGE_LINKS");
 	int contentfd = dup(_req->content_dir);

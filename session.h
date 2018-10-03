@@ -13,24 +13,41 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-#ifndef __HELPER_H__
-#define __HELPER_H__
 
-#include <regex.h>
+#ifndef __SESSION_H__
+#define __SESSION_H__
 
-struct memmap {
-	void	*data;
-	size_t	 size;
+#include <sys/types.h>
+#include <db.h>
+#include <stdbool.h>
+
+struct session_data {
+	time_t  timeout;
+	int     loggedin;
+	char    username[32];
 };
 
-const char	*rx_get_errormsg(int, regex_t *);
 
-void		 decode_string(char *);
-
-struct memmap	*memmap_new(const char *);
-struct memmap	*memmap_new_at(int, const char *);
-void		 memmap_free(struct memmap *);
-int		 memmap_chomp(struct memmap *);
+struct session {
+	struct session_data	 data;
+	char			*sid;
+};
 
 
-#endif // __HELPER_H__
+struct session_store {
+	DB	*db;
+	char	*filename;
+};
+
+struct session_data	*session_data_new(void);
+bool			 session_data_timeout(struct session_data *);
+struct session		*session_new(void);
+void			 session_free(struct session *);
+bool			 session_save(struct session *, struct session_store *,
+		bool);
+struct session		*session_load(char *, struct session_store *);
+struct session_store	*session_store_new(const char *);
+void			 session_store_free(struct session_store *);
+void			 session_store_cleanup(struct session_store *);
+
+#endif // __SESSION_H__

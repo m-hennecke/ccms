@@ -15,8 +15,11 @@
  */
 
 #include <sys/mman.h>
+#include <sys/time.h>
 #include <err.h>
+#include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <regex.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,6 +41,12 @@
 #define ACCEPT_LANGUAGE_RX_PATTERN "^ *([a-z]{1,8}(-[a-z]{1,8})?)" \
 	" *(; *q *= *(1|0\\.[0-9]+))?$"
 #define ACCEPT_LANGUAGE_MAX_GROUPS 5
+
+const char *supported_request_methods[3] = {
+	"GET",
+	"POST",
+	NULL
+};
 
 struct lang_pref *
 lang_pref_new(const char *_lang, const float _prio)
@@ -171,6 +180,7 @@ page_info_free(struct page_info *_info)
 	memmap_free(_info->content);
 	memmap_free(_info->descr);
 	memmap_free(_info->link);
+	memmap_free(_info->login);
 	memmap_free(_info->sort);
 	memmap_free(_info->style);
 	memmap_free(_info->script);
@@ -194,11 +204,11 @@ request_new(char *_path_info)
 
 	req->content_dir = open(cms_content_dir, O_DIRECTORY | O_RDONLY);
 	if (-1 == req->content_dir)
-		err(1, NULL);
+		err(1, "%s", cms_content_dir);
 
 	req->template_dir = open(cms_template_dir, O_DIRECTORY | O_RDONLY);
 	if (-1 == req->template_dir)
-		err(1, NULL);
+		err(1, "%s", cms_template_dir);
 	req->page_dir = -1;
 	req->lang_dir = -1;
 	req->path_info = strdup(_path_info);
@@ -210,6 +220,24 @@ request_new(char *_path_info)
 
 	TAILQ_INIT(&req->headers);
 	TAILQ_INIT(&req->accept_languages);
+	TAILQ_INIT(&req->cookies);
+	TAILQ_INIT(&req->params);
+
+	const char *req_method = getenv("REQUEST_METHOD");
+	if (req_method) {
+		int i = 0;
+		const char **supported = &supported_request_methods[0];
+		while (*supported) {
+			if (strcmp(req_method, *supported) == 0) {
+				req->request_method = i;
+				break;
+			}
+			i++;
+			supported++;
+		}
+		if (*supported == NULL)
+			errx(1, "unsupported request method '%s'", req_method);
+	}
 
 	regex_t rx;
 	int rc = regcomp(&rx, PAGE_URI_RX_PATTERN, REG_EXTENDED);
@@ -304,13 +332,36 @@ request_free(struct request *_req)
 			TAILQ_REMOVE(&_req->accept_languages, lp, entries);
 			free(lp);
 		}
+
+		struct cookie *c;
+		while ((c = TAILQ_FIRST(&_req->cookies))) {
+			TAILQ_REMOVE(&_req->cookies, c, entries);
+			free(c);
+		}
+
+		struct param *p;
+		while ((p = TAILQ_FIRST(&_req->params))) {
+			TAILQ_REMOVE(&_req->params, p, entries);
+			free(p);
+		}
+
 		dir_list_free(_req->avail_languages);
+
+		session_free(_req->session);
+		session_store_free(_req->session_store);
+
+		htpasswd_free(_req->htpasswd);
+
+		memmap_free(_req->tmpl_file);
+
+		if (_req->session_store)
+			session_store_cleanup(_req->session_store);
 	}
 }
 
 
 struct page_info *
-fetch_page(struct request *_req)
+request_fetch_page(struct request *_req)
 {
 	struct dir_list *files = NULL;
 	struct dir_entry *e;
@@ -339,6 +390,8 @@ fetch_page(struct request *_req)
 			p->descr = memmap_new_at(cwd, e->filename);
 		} else if (strcmp("LINK", e->filename) == 0) {
 			p->link = memmap_new_at(cwd, e->filename);
+		} else if (strcmp("LOGIN", e->filename) == 0) {
+			p->login = memmap_new_at(cwd, e->filename);
 		} else if (strcmp("SORT", e->filename) == 0) {
 			p->sort = memmap_new_at(cwd, e->filename);
 		} else if (strcmp("SCRIPT", e->filename) == 0) {
@@ -362,6 +415,8 @@ fetch_page(struct request *_req)
 	if (!(p->content && p->link && p->sort && p->title && p->descr)) 
 		goto error_out;
 
+	_req->page_info = p;
+	_req->content = p->content;
 cleanup:
 	if (files)
 		dir_list_free(files);
@@ -375,6 +430,122 @@ error_out:
 	page_info_free(p);
 	p = NULL;
 	goto cleanup;
+}
+
+
+struct tmpl_data *
+request_init_tmpl_data(struct request *_req)
+{
+	_req->data = tmpl_data_new();
+	tmpl_data_set_variable(_req->data, "CURRENT_PAGE", _req->path_info);
+	if (_req->page_info->descr)
+		tmpl_data_set_variablen(_req->data, "DESCR",
+				_req->page_info->descr->data,
+				_req->page_info->descr->size);
+
+	return _req->data;
+}
+
+
+bool
+request_handle_login(struct request *_req)
+{
+	if (! _req->page_info->login)
+		return true;
+
+	request_parse_cookies(_req);
+	_req->session_store = session_store_new(cms_session_db);
+
+	struct cookie *c = request_cookie_get(_req, "sid");
+	if (c != NULL)
+		_req->session = session_load(c->value, _req->session_store);
+	const bool new_session = (_req->session == NULL);
+	const time_t now = time(NULL);
+	const bool timeout = (_req->session 
+			&& (_req->session->data.timeout < now));
+	if (new_session || timeout) {
+		struct session *session = session_new();
+		if (timeout) {
+			session_free(_req->session);
+		}
+		_req->session = session;
+		request_cookie_remove(_req, c);
+		cookie_free(c);
+		c = cookie_new("sid", _req->session->sid);
+		c->path = strdup("/");
+	}
+
+	request_cookie_set(_req, c);
+	_req->session->data.timeout = now + (60 * 30);
+	session_save(_req->session, _req->session_store, new_session);
+
+	if (_req->request_method == POST) {
+		request_parse_params(_req, getenv("QUERY_STRING"));
+		char *content_type = getenv("CONTENT_TYPE");
+		if (content_type
+				&& (strcmp(content_type,
+					"application/x-www-form-urlencoded")
+					== 0)) {
+			if (request_read_post_body(_req))
+				request_parse_params(_req, _req->req_body);
+		}
+		char *username = NULL;
+		char *password = NULL;
+		struct param *p = request_get_param(_req, "username", NULL);
+		if (p)
+			username = p->value;
+		p = request_get_param(_req, "password", NULL);
+		if (p)
+			password = p->value;
+		if (username && password) {
+			if (_req->htpasswd == NULL)
+				_req->htpasswd
+					= htpasswd_init(cms_session_htpasswd);
+			_req->session->data.loggedin
+				= htpasswd_check_password(_req->htpasswd,
+						username, password);
+			session_save(_req->session, _req->session_store, false);
+		}
+	}
+	if (!_req->session->data.loggedin) {
+		_req->content = _req->page_info->login;
+	}
+
+	return (_req->content == _req->page_info->content);
+}
+
+
+struct buffer_list *
+request_render_page(struct request *_req, const char *_tmpl_filename)
+{
+	struct buffer_list *cb;
+	struct buffer_list *result = NULL;
+
+	if (_req->content) {
+		cb = tmpl_parse(_req->content->data, _req->content->size,
+				_req->data);
+		tmpl_data_set_variable(_req->data, "CONTENT",
+				buffer_list_concat_string(cb));
+	} else {
+		_error("404 Not Found", NULL);
+	}
+
+	struct tmpl_loop *links = request_get_links(_req);
+	struct tmpl_loop *lang_links = request_get_language_links(_req);
+	if (links)
+		tmpl_data_set_loop(_req->data, "LINK_LOOP", links);
+	if (lang_links)
+		tmpl_data_set_loop(_req->data, "LANGUAGE_LINKS", lang_links);
+
+	_req->tmpl_file = memmap_new_at(_req->template_dir, _tmpl_filename);
+	if (_req->tmpl_file == NULL)
+		_error("500 Internal Server Error", NULL);
+	result = tmpl_parse(_req->tmpl_file->data, _req->tmpl_file->size,
+			_req->data);
+
+	buffer_list_free(cb);
+
+	return result;
 }
 
 
@@ -422,6 +593,250 @@ request_output_headers(struct request *_req)
 		free(header);
 	}
 	return bl;
+}
+
+
+void
+request_cookie_mark_delete(struct request *_req, struct cookie *_cookie)
+{
+	free(_cookie->value);
+	_cookie->value = strdup("deleted");
+	_cookie->expires = 1;
+	request_cookie_set(_req, _cookie);
+}
+
+
+void
+request_cookie_set(struct request *_req, struct cookie *_cookie)
+{
+	char expires[38] = { 0 };
+	if (_cookie->expires != 0) {
+		struct tm *tm = gmtime(&_cookie->expires);
+		strftime(expires, sizeof(expires), "%a, %d %b %Y %T GMT", tm);
+	}
+	char *value;
+	if (asprintf(&value, "%s=%s%s%s%s%s%s",
+				_cookie->name, _cookie->value,
+				(_cookie->path) ? "; path="    : "",
+				(_cookie->path) ? _cookie->path : "",
+				(_cookie->domain) ? "; domain="    : "",
+				(_cookie->domain) ? _cookie->domain : "",
+				(expires[0]) ? expires : "") == -1)
+		err(1, NULL);
+	request_add_header(_req, "Set-Cookie", value);
+	free(value);
+}
+
+
+struct cookie *
+request_cookie_get(struct request *_req, const char *_name)
+{
+	struct cookie *c;
+	TAILQ_FOREACH(c, &_req->cookies, entries) {
+		if (strcmp(c->name, _name) == 0)
+			return c;
+	}
+	return NULL;
+}
+
+
+bool
+request_cookie_remove(struct request *_req, struct cookie *_c)
+{
+	struct cookie *c = TAILQ_FIRST(&_req->cookies);
+	while (c) {
+		if (_c == c) {
+			TAILQ_REMOVE(&_req->cookies, c, entries);
+			return true;
+		}
+		c = TAILQ_NEXT(c, entries);
+	}
+	return false;
+}
+
+
+struct cookie *
+cookie_new(const char *_name, const char *_value)
+{
+	struct cookie *c = calloc(1, sizeof(struct cookie));
+	if (c == NULL)
+		err(1, NULL);
+	c->name = strdup(_name);
+	c->value = strdup(_value);
+
+	return c;
+}
+
+
+void
+cookie_free(struct cookie *_cookie)
+{
+	if (_cookie) {
+		free(_cookie->name);
+		free(_cookie->value);
+		free(_cookie->path);
+		free(_cookie->domain);
+		free(_cookie);
+	}
+}
+
+
+void
+request_parse_cookies(struct request *_req)
+{
+	const char *env_http_cookie = getenv("HTTP_COOKIE");
+	if (env_http_cookie == NULL)
+		return;
+
+	char *cookies = strdup(env_http_cookie);
+	if (cookies == NULL)
+		err(1, NULL);
+
+	char *key, *value;
+	char *s = cookies;
+
+	while (s && *s != '\0') { 
+		// Skip leading whitespace
+		while (*s == ' ')
+			s++;
+
+		// Find a '='
+		key = s;
+		if ((s = strchr(s, '=')) != NULL) {
+			*s++ = '\0';
+			value = s;
+			s = strchr(s, ';');
+			if (s != NULL) {
+				*s++ = '\0';
+			}
+		} else {
+			// Try to find a ';', and continue after
+			s = strchr(key, ';');
+			if (s != NULL)
+				s++;
+			continue;
+		}
+
+	        struct cookie * cookie = cookie_new(key, value);
+		TAILQ_INSERT_TAIL(&_req->cookies, cookie, entries);
+	}
+	free(cookies);
+}
+
+
+struct param *
+param_new(const char *_name, const char *_value)
+{
+	struct param *p = calloc(1, sizeof(struct param));
+	if (_name)
+		p->name = strdup(_name);
+	if (_value)
+		p->value = strdup(_value);
+	return p;
+}
+
+
+void
+param_decode(struct param *_param)
+{
+	decode_string(_param->value);
+}
+
+
+void
+param_free(struct param *_param)
+{
+	if (_param) {
+		free(_param->name);
+		free(_param->value);
+	}
+}
+
+
+void
+request_parse_params(struct request *_req, const char *_params)
+{
+	if (_params == NULL)
+		return;
+
+	char *param_string = strdup(_params);
+	if (param_string == NULL)
+		err(1, NULL);
+	char *s = param_string;
+	char *name, *value;
+
+	while (s && *s != '\0') {
+		name = s;
+		value = NULL;
+		s = strchr(s, '=');
+		if (s != NULL) {
+			*s++ = '\0';
+			value = s;
+			s = strchr(s, '&');
+			if (s != NULL) {
+				*s++ = '\0';
+			}
+		}
+		struct param *p = param_new(name, value);
+		TAILQ_INSERT_TAIL(&_req->params, p, entries);
+	}
+
+	free(param_string);
+}
+
+
+struct param *
+request_get_param(struct request *_req, const char *_name, struct param *_p)
+{
+	struct param *p;
+	TAILQ_FOREACH(p, &_req->params, entries) {
+		if (strcmp(_name, p->name) == 0) {
+			if (p != _p)
+				break;
+		}
+	}
+	return p;
+}
+
+
+bool
+request_read_post_body(struct request *_req)
+{
+	if (_req->request_method == POST) {
+		const char *content_length_env = getenv("CONTENT_LENGTH");
+		if (content_length_env == NULL)
+			return false;
+		errno = 0;
+		char *ep;
+		unsigned long content_length
+			= strtoul(content_length_env, &ep, 10);
+		if (content_length_env[0] == '\0' || *ep != '\0') {
+			warnx("CONTENT_LENGTH is not a number");
+			return false;
+		}
+		if (errno == ERANGE && content_length == ULONG_MAX) {
+			warnx("CONTENT_LENGTH out of range");
+			return false;
+		}
+
+		_req->req_body_size = content_length;
+		_req->req_body = malloc(content_length + 1);
+		unsigned char *buf = _req->req_body;
+
+		ssize_t todo = content_length;
+		off_t offset = 0;
+		while (todo > 0) {
+			ssize_t n = read(STDIN_FILENO, buf + offset,
+					todo - offset);
+			if (n == -1)
+				err(1, NULL);
+			todo -= n;
+			offset += n;
+		}
+		buf[content_length] = '\0';
+		return (todo == 0);
+	}
+	return false;
 }
 
 
