@@ -142,7 +142,7 @@ decode_string(char *_s)
 
 	char *s = _s;
 	char *d = s;
-	while (s != '\0') {
+	while (*s != '\0') {
 		if (*s == '+') {
 			*d = ' ';
 		} else {
