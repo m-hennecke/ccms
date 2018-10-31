@@ -18,6 +18,7 @@
 #define __BUFFER_H__
 
 #include <sys/queue.h>
+#include <stdint.h>
 
 struct buffer {
 	TAILQ_ENTRY(buffer)	entries;
