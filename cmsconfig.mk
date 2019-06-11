@@ -8,10 +8,11 @@ SESSION_DIR=		${ROOT_DIR}/session
 CMS_DEFAULT_LANGUAGE?=	en
 CMS_DEFAULT_TEMPLATE?=	page.tmpl
 CMS_CONFIG_URL_IMAGES?=	/images/
-PREFIX?=		/var/www/cgi-bin/
-BINDIR=			${DESTDIR}${PREFIX}
+BINDIR=			/var/www/cgi-bin
 DAEMON=			${BINDIR}/${PROG}
 CHROOT?=		/var/www
+WWW_USER?=		www
+WWW_GROUP?=		www
 
 # Absolute path from within the chroot
 ROOT_DIR=		${CMS_ROOT_DIR:S/^${CHROOT}//}

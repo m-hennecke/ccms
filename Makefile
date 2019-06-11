@@ -14,4 +14,8 @@ NOMAN=		1
 # include site settings
 .include "cmsconfig.mk"
 
+afterinstall:
+	${INSTALL} -d -o ${WWW_USER} -g ${WWW_GROUP} -m 700 \
+		${DESTDIR}${CHROOT}${SESSION_DIR}
+
 .include <bsd.prog.mk>

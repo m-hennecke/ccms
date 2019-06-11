@@ -17,9 +17,8 @@ LDADD+=		-lutil
 LDSTATIC=	${STATIC}
 NOMAN=		1
 
-PREFIX?=		/var/www/cgi-bin/
-BINDIR=			${DESTDIR}${PREFIX}
-DAEMON=			${BINDIR}/${PROG}
+BINDIR=		/var/www/cgi-bin
+DAEMON=		${BINDIR}/${PROG}
 
 tmpl.h:		${.CURDIR}/env.template
 	(echo -n "const char *env_tmpl = "; \
