@@ -215,8 +215,7 @@ request_new(char *_path_info)
 
 	req->lang = NULL;
 	req->page = NULL;
-	char *env_request_path = getenv("DOCUMENT_ROOT");
-	req->path = strdup((env_request_path) ? env_request_path : "/");
+	req->path = CMS_ROOT_URL;
 
 	TAILQ_INIT(&req->headers);
 	TAILQ_INIT(&req->accept_languages);
@@ -318,7 +317,6 @@ request_free(struct request *_req)
 		free(_req->path_info);
 		free(_req->page);
 		free(_req->lang);
-		free(_req->path);
 		free(_req->status);
 
 		struct header *h;
