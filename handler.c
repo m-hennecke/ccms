@@ -529,6 +529,7 @@ request_render_page(struct request *_req, const char *_tmpl_filename)
 	} else {
 		_error("404 Not Found", NULL);
 	}
+	tmpl_data_set_variable(_req->data, "LANGUAGE", _req->lang);
 
 	struct tmpl_loop *links = request_get_links(_req);
 	struct tmpl_loop *lang_links = request_get_language_links(_req);
