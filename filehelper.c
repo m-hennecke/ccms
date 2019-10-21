@@ -127,12 +127,14 @@ dir_entry_exists(const char *_name, struct dir_list *_dir)
 void
 dir_list_free(struct dir_list *_list)
 {
-	struct dir_entry *entry;
-	while ((entry = TAILQ_FIRST(&_list->entries))) {
-		TAILQ_REMOVE(&_list->entries, entry, entries);
-		dir_entry_free(entry);
+	if (_list) {
+		struct dir_entry *entry;
+		while ((entry = TAILQ_FIRST(&_list->entries))) {
+			TAILQ_REMOVE(&_list->entries, entry, entries);
+			dir_entry_free(entry);
+		}
+		free(_list->path);
 	}
-	free(_list->path);
 }
 
 
