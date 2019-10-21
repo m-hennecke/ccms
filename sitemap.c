@@ -267,8 +267,8 @@ format_url(char *_hostname, char *_lang, char *_page, bool ssl)
 {
 	char *http = (ssl) ? "https" : "http";
 	char *url;
-	if (asprintf(&url, "%s://%s/%s/%s.html", http, _hostname, _lang,
-				_page) == -1)
+	if (asprintf(&url, "%s://%s%s%s/%s.html", http, _hostname,
+				CMS_ROOT_URL, _lang, _page) == -1)
 		err(1, NULL);
 	return url;
 }
