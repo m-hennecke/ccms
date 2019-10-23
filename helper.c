@@ -93,18 +93,15 @@ memmap_free(struct memmap *_map)
 }
 
 
-int
+size_t
 memmap_chomp(struct memmap *_m)
 {
-	int chomp = 0;
+	size_t s = _m->size;
 	if (_m && _m->data) {
-		while ((_m->size > 0)
-				&& !isprint(((char *)_m->data)[_m->size-1])) {
-			chomp++;
-			_m->size--;
-		}
+		while ((s > 0) && isspace(((char *)_m->data)[s-1]))
+			s--;
 	}
-	return chomp;
+	return s;
 }
 
 

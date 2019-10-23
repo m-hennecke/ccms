@@ -30,7 +30,7 @@ void		 decode_string(char *);
 struct memmap	*memmap_new(const char *);
 struct memmap	*memmap_new_at(int, const char *);
 void		 memmap_free(struct memmap *);
-int		 memmap_chomp(struct memmap *);
+size_t		 memmap_chomp(struct memmap *);
 
 
 #endif // __HELPER_H__

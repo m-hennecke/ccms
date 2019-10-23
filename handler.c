@@ -530,7 +530,7 @@ request_render_page(struct request *_req, const char *_tmpl_filename)
 	tmpl_data_set_variable(_req->data, "LANGUAGE", _req->lang);
 	tmpl_data_set_variablen(_req->data, "TITLE",
 			_req->page_info->title->data,
-			_req->page_info->title->size);
+			memmap_chomp(_req->page_info->title));
 
 	struct tmpl_loop *links = request_get_links(_req);
 	struct tmpl_loop *lang_links = request_get_language_links(_req);

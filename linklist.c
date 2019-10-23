@@ -156,8 +156,6 @@ _link_new_at(int _fd, char *_dirname)
 	if (fstatat(dirfd, "SSL", &sb, 0) != -1)
 		link->ssl = ((sb.st_mode & S_IFREG) != 0);
 	link->linkname = strdup(_dirname);
-	memmap_chomp(link->link);
-	memmap_chomp(link->sort);
 
 	close(dirfd);
 	return link;
@@ -218,7 +216,7 @@ _link_list_remove_unselected_subs(struct _link_list *_lst)
 struct tmpl_data *
 _link_get_tmpl_data(struct _link *_l, struct request *_req, bool _js)
 {
-	char *linkdata = strndup(_l->link->data, _l->link->size);
+	char *linkdata = strndup(_l->link->data, memmap_chomp(_l->link));
 	char *aref, *jslink, *link;
 	if ((asprintf(&link, "%s%s/%s.html", _req->path, _req->lang,
 					_l->linkname) == -1))
@@ -231,7 +229,7 @@ _link_get_tmpl_data(struct _link *_l, struct request *_req, bool _js)
 		err(1, NULL);
 	struct tmpl_data *data =  tmpl_data_new();
 	tmpl_data_set_variablen(data, "NR", _l->sort->data,
-			_l->sort->size);
+			memmap_chomp(_l->sort));
 	tmpl_data_set_variablen(data, "DESCR", _l->descr->data,
 			_l->descr->size);
 	tmpl_data_move_variable(data, "LINK", aref);
