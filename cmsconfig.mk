@@ -19,7 +19,7 @@ WWW_GROUP?=		www
 ROOT_DIR=		${CMS_ROOT_DIR:S/^${CHROOT}//}
 
 # Common CFLAGS
-CFLAGS+=		-Wall -I${.CURDIR}
+CFLAGS+=		-Wall -I${.CURDIR} -Werror
 CFLAGS+=		-Wstrict-prototypes -Wmissing-prototypes
 CFLAGS+=		-Wmissing-declarations
 CFLAGS+=		-Wshadow -Wpointer-arith -Wsign-compare -Wcast-qual
