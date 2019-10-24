@@ -42,6 +42,8 @@
 	" *(; *q *= *(1|0\\.[0-9]+))?$"
 #define ACCEPT_LANGUAGE_MAX_GROUPS 5
 
+#define HTTP_DATE_FMT "%a, %d %b %y %H:%M:%S GMT"
+
 const char *supported_request_methods[3] = {
 	"GET",
 	"POST",
@@ -404,14 +406,26 @@ request_fetch_page(struct request *_req)
 			p->title = memmap_new_at(cwd, e->filename);
 		}
 	}
-	char last_modified[30];
-	strftime(last_modified, sizeof(last_modified),
-			"%a, %d %b %y %H:%M:%S GMT", gmtime(&files->newest));
-	request_add_header(_req, "Last-Modified", last_modified);
 
 	// Test for all required fields, if not here we error out
 	if (!(p->content && p->link && p->sort && p->title && p->descr)) 
 		goto error_out;
+
+	// Test if the If-Modified-Since header exists and the newest
+	// file from the content directory have equal time stamps
+	const char *if_modified_since = getenv("HTTP_IF_MODIFIED_SINCE");
+	if (if_modified_since) {
+		struct tm tm;
+		if (strptime(if_modified_since, HTTP_DATE_FMT, &tm)) {
+			if (timegm(&tm) >= files->newest)
+				_error("304 Not Modified", NULL);
+		}
+	}
+
+	char last_modified[30];
+	strftime(last_modified, sizeof(last_modified),
+			HTTP_DATE_FMT, gmtime(&files->newest));
+	request_add_header(_req, "Last-Modified", last_modified);
 
 	_req->page_info = p;
 	_req->content = p->content;
