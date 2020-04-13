@@ -227,7 +227,7 @@ parser_state_new(const char *_input, size_t _size, struct buffer_list *_out)
 	state->input  = malloc(_size + 1);
 	if (NULL == state->input)
 		err(1, NULL);
-	strlcpy(state->input, _input, _size);
+	strlcpy(state->input, _input, _size + 1);
 	state->size   = _size;
 	state->output = _out;
 	state->data   = NULL;
