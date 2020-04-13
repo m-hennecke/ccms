@@ -291,7 +291,7 @@ parser_enumerate_tags(struct parser_state *_state)
 			TAILQ_INSERT_TAIL(&_state->tags, info, entry);
 			n++;
 		}
-		pos += loc->rm_eo + 1;
+		pos += loc->rm_eo;
 	}
 
 	return n;
@@ -325,7 +325,7 @@ tmpl_handle_if(struct parser_state *_p, struct tag_info *_info)
 	char *block_end;
 	struct tag_info *else_tag = _info->else_tag;
 	if (cond) {
-		block_start = _info->end + 1;
+		block_start = _info->end;
 		if (else_tag)
 			block_end = else_tag->start;
 		else
@@ -375,7 +375,7 @@ tmpl_handle_loop(struct parser_state *_p, struct tag_info *_info)
 	const size_t len = closing_tag->start - _info->end;
 	struct tmpl_data *data;
 	TAILQ_FOREACH(data, &loop->data, entry) {
-		struct buffer_list *block = tmpl_parse(_info->end + 1,
+		struct buffer_list *block = tmpl_parse(_info->end,
 				len, data);
 		buffer_list_add_list(_p->output, block);
 		buffer_list_free(block);
