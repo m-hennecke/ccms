@@ -7,7 +7,9 @@ SRCS=		cms.c filehelper.c buffer.c sitemap.c template.c \
 
 SUBDIR=		sitemap cgienv
 
-LDADD+=		-lutil -lz
+CFLAGS+=	-I/usr/local/include
+LDFLAGS+=	-L/usr/local/lib
+LDADD+=		-lutil -lz -llowdown -lm
 LDSTATIC=	${STATIC}
 NOMAN=		1
 

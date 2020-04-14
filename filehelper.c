@@ -91,8 +91,7 @@ get_dir_entries_at(int _fd, const char *_directory)
 struct dir_entry *
 dir_entry_new(const char *_filename)
 {
-	struct dir_entry *entry = calloc(1,
-			sizeof(struct dir_entry));
+	struct dir_entry *entry = calloc(1, sizeof(struct dir_entry));
 	if (entry == NULL)
 		err(1, NULL);
 	entry->filename = strdup(_filename);

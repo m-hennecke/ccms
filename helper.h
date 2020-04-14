@@ -17,10 +17,18 @@
 #define __HELPER_H__
 
 #include <regex.h>
+#include <stdbool.h>
 
 struct memmap {
 	void	*data;
 	size_t	 size;
+};
+
+struct md_mmap {
+	struct memmap	*mmap;
+	bool		 md;
+	char		*html;
+	size_t		 htmlsz;
 };
 
 const char	*rx_get_errormsg(int, regex_t *);
@@ -31,6 +39,11 @@ struct memmap	*memmap_new(const char *);
 struct memmap	*memmap_new_at(int, const char *);
 void		 memmap_free(struct memmap *);
 size_t		 memmap_chomp(struct memmap *);
-
+struct md_mmap	*md_mmap_new(const char *);
+struct md_mmap	*md_mmap_new_at(int, const char *);
+struct md_mmap	*md_mmap_new_from_memmap(struct memmap *);
+void		 md_mmap_free(struct md_mmap *);
+void		 md_mmap_parse(struct md_mmap *);
+void		 md_mmap_content(struct md_mmap *, void **, size_t *);
 
 #endif // __HELPER_H__

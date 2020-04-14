@@ -15,20 +15,25 @@
  */
 
 #include <sys/mman.h>
+#include <sys/queue.h>
 #include <sys/stat.h>
 #include <ctype.h>
 #include <err.h>
 #include <fcntl.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
+
+#include <lowdown.h>
 
 #include "helper.h"
 
 static struct memmap	*_map_fd(int);
 static char		 decode_hexdigit(const char *);
 static bool		 ishexdigit(const int);
-
+static const char	*_get_file_extension(const char *);
 
 
 const char *
@@ -37,6 +42,16 @@ rx_get_errormsg(int _rc, regex_t *_rx)
 	static char errmsg[512];
 	regerror(_rc, _rx, errmsg, sizeof(errmsg));
 	return errmsg;
+}
+
+
+const char *
+_get_file_extension(const char *_filename)
+{
+	const char *dot = strchr(_filename, '.');
+	if (dot == NULL || dot == _filename)
+		return "";
+	return dot + 1;
 }
 
 
@@ -102,6 +117,94 @@ memmap_chomp(struct memmap *_m)
 			s--;
 	}
 	return s;
+}
+
+
+struct md_mmap *
+md_mmap_new(const char *_filename)
+{
+	struct memmap *mmap = memmap_new(_filename);
+	if (mmap == NULL)
+		return NULL;
+
+	struct md_mmap *mdbuf = calloc(1, sizeof(struct md_mmap));
+	if (mdbuf == NULL)
+		err(1, NULL);
+	mdbuf->mmap = mmap;
+	mdbuf->md = (strcmp("md", _get_file_extension(_filename)) == 0);
+	return mdbuf;
+}
+
+
+struct md_mmap *
+md_mmap_new_at(int _fd, const char *_filename)
+{
+	int fd = openat(_fd, _filename, O_RDONLY);
+	if (-1 == fd) {
+		warn(NULL);
+		return NULL;
+	}
+
+	struct memmap *mmap = _map_fd(fd);
+	if (mmap == NULL)
+		return NULL;
+
+	struct md_mmap *mdbuf = calloc(1, sizeof(struct md_mmap));
+	if (mdbuf == NULL)
+		err(1, NULL);
+	mdbuf->mmap = mmap;
+	mdbuf->md = (strcmp("md", _get_file_extension(_filename)) == 0);
+	return mdbuf;
+}
+
+
+struct md_mmap *
+md_mmap_new_from_memmap(struct memmap *_mmap)
+{
+	struct md_mmap *mdbuf = calloc(1, sizeof(struct md_mmap));
+	if (mdbuf == NULL)
+		err(1, NULL);
+	mdbuf->mmap = _mmap;
+	return mdbuf;
+}
+
+
+void
+md_mmap_free(struct md_mmap *_md)
+{
+	if (_md) {
+		memmap_free(_md->mmap);
+		free(_md->html);
+	}
+}
+
+
+static const struct lowdown_opts ldopts = {
+	LOWDOWN_HTML,
+	LOWDOWN_STRIKE | LOWDOWN_AUTOLINK | LOWDOWN_FENCED | LOWDOWN_TABLES,
+	0
+};
+
+
+void
+md_mmap_parse(struct md_mmap *_md)
+{
+	if (_md && _md->md)
+		lowdown_buf(&ldopts, _md->mmap->data, _md->mmap->size,
+				&(_md->html), &(_md->htmlsz), NULL);
+}
+
+
+void
+md_mmap_content(struct md_mmap *_md, void **_data, size_t *_size)
+{
+	if (_md) {
+		*_data = _md->md ? _md->html : _md->mmap->data;
+		*_size = _md->md ? _md->htmlsz : _md->mmap->size;
+	} else {
+		*_data = NULL;
+		*_size = 0;
+	}
 }
 
 
