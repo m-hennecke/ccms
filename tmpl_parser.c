@@ -70,7 +70,7 @@ struct tag_strings {
 #define TMPL_RX_PATTERN "(<(TMPL_"					\
 	"(ELSE|"							\
 	"(IF|INCL|INCLUDE|LOOP|VAR|UNLESS)( +name=\"([^\"]+)\"))?)"	\
-	">)|(</TMPL_(IF|LOOP|VAR|UNLESS *>))"
+	" *>)|(</TMPL_(IF|LOOP|VAR|UNLESS) *>)"
 #define TMPL_RX_MAX_GROUPS 10
 static regex_t _rx;
 static bool _rx_initialized = false;
@@ -335,13 +335,13 @@ tmpl_handle_if(struct parser_state *_p, struct tag_info *_info)
 			block_start = else_tag->end + 1;
 			block_end = _info->closing_tag->start;
 		} else
-			return _info->closing_tag->end + 1;
+			return _info->closing_tag->end;
 	}
 	struct buffer_list *block = tmpl_parse(block_start,
 			block_end - block_start, _p->data);
 	buffer_list_add_list(_p->output, block);
 	buffer_list_free(block);
-	return _info->closing_tag->end + 1;
+	return _info->closing_tag->end;
 }
 
 
@@ -370,17 +370,17 @@ tmpl_handle_loop(struct parser_state *_p, struct tag_info *_info)
 	struct tag_info *closing_tag = _info->closing_tag;
 
 	if (!cond)
-		return closing_tag->end + 1;
+		return closing_tag->end;
 
 	const size_t len = closing_tag->start - _info->end;
 	struct tmpl_data *data;
 	TAILQ_FOREACH(data, &loop->data, entry) {
 		struct buffer_list *block = tmpl_parse(_info->end,
-				len, data);
+				len + 1, data);
 		buffer_list_add_list(_p->output, block);
 		buffer_list_free(block);
 	}
-	return closing_tag->end + 1;
+	return closing_tag->end;
 }
 
 
