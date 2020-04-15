@@ -21,6 +21,9 @@
 #include <fcntl.h>
 #include <regex.h>
 #include <stdbool.h>
+#if defined(DEBUG)
+#include <stdio.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
