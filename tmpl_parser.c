@@ -17,12 +17,13 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/queue.h>
 #include <err.h>
 #include <fcntl.h>
 #include <regex.h>
 #include <stdbool.h>
+#if defined(DEBUG)
 #include <stdio.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -227,7 +228,8 @@ parser_state_new(const char *_input, size_t _size, struct buffer_list *_out)
 	state->input  = malloc(_size + 1);
 	if (NULL == state->input)
 		err(1, NULL);
-	strlcpy(state->input, _input, _size + 1);
+	memcpy(state->input, _input, _size);
+	state->input[_size] = '\0';
 	state->size   = _size;
 	state->output = _out;
 	state->data   = NULL;
