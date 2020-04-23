@@ -378,7 +378,7 @@ tmpl_handle_loop(struct parser_state *_p, struct tag_info *_info)
 	struct tmpl_data *data;
 	TAILQ_FOREACH(data, &loop->data, entry) {
 		struct buffer_list *block = tmpl_parse(_info->end,
-				len + 1, data);
+				len, data);
 		buffer_list_add_list(_p->output, block);
 		buffer_list_free(block);
 	}
@@ -458,7 +458,7 @@ tmpl_parse(const char *_tmpl, size_t _len, struct tmpl_data *_data)
 	}
 	char *end = state->input + state->size;
 	if (s < end)
-		buffer_list_add_stringn(out, s, end - s); 
+		buffer_list_add_stringn(out, s, end - s + 1);
 
 	parser_state_free(state);
 	parser_cleanup();
