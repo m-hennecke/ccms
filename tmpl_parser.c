@@ -451,14 +451,14 @@ tmpl_parse(const char *_tmpl, size_t _len, struct tmpl_data *_data)
 			continue;
 		if (s < info->start || info->close) {
 			// Copy the data block from s to the tags start
-			buffer_list_add_stringn(out, s, info->start - s + 1);
+			buffer_list_add_stringn(out, s, info->start - s);
 			s = info->end;
 		}
 		s = (*tags[info->type].handle_func)(state, info);
 	}
 	char *end = state->input + state->size;
 	if (s < end)
-		buffer_list_add_stringn(out, s, end - s + 1);
+		buffer_list_add_stringn(out, s, end - s);
 
 	parser_state_free(state);
 	parser_cleanup();
