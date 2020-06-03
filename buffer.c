@@ -37,7 +37,7 @@ buffer_new(const char *_data)
 	if (buf == NULL)
 		err(1, NULL);
 	buf->size = data_len;
-	strlcpy(buf->data, _data, data_len + 1);
+	memcpy(buf->data, _data, data_len);
 	return buf;
 }
 
@@ -113,10 +113,12 @@ buffer_list_concat_string(struct buffer_list *_bl)
 	char *out_string = malloc(_bl->size + 1);
 	if (out_string == NULL)
 		err(1, NULL);
-	out_string[0] = '\0';
+	char *next_out = out_string;
 	TAILQ_FOREACH(buf, &_bl->buffers, entries) {
-		strlcat(out_string, buf->data, _bl->size + 1);
+		memcpy(next_out, buf->data, buf->size);
+		next_out += buf->size;
 	}
+	*next_out = '\0';
 
 	return out_string;
 }
@@ -132,7 +134,7 @@ buffer_list_concat(struct buffer_list *_bl)
 		err(1, NULL);
 	char *next_out = out;
 	TAILQ_FOREACH(buf, &_bl->buffers, entries) {
-		memcpy(next_out, buf->data, _bl->size);
+		memcpy(next_out, buf->data, buf->size);
 		next_out += buf->size;
 	}
 
@@ -152,10 +154,10 @@ buffer_list_add_string(struct buffer_list *_bl, const char *_s)
 void
 buffer_list_add_stringn(struct buffer_list *_bl, const char *_s, size_t _len)
 {
-	struct buffer *buf = buffer_empty_new(_len + 1);
-	strlcpy(buf->data, _s, _len);
+	struct buffer *buf = buffer_empty_new(_len);
+	memcpy(buf->data, _s, _len);
 	TAILQ_INSERT_TAIL(&_bl->buffers, buf, entries);
-	_bl->size += buf->size;
+	_bl->size += _len;
 }
 
 
