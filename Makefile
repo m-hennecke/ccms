@@ -18,6 +18,9 @@ NOMAN=		1
 
 afterinstall:
 	${INSTALL} -d -o ${WWW_USER} -g ${WWW_GROUP} -m 700 \
-		${DESTDIR}${CHROOT}${SESSION_DIR}
+		"${DESTDIR}${CHROOT}${SESSION_DIR}"
+	test -d "${DESTDIR}${CMS_ROOT_DIR}" && \
+		echo "CMS_HTROOT=	${CMS_HTROOT}" \
+			> "${DESTDIR}${CMS_ROOT_DIR}/config.mk"
 
 .include <bsd.prog.mk>
