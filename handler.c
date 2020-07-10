@@ -348,14 +348,13 @@ request_free(struct request *_req)
 		dir_list_free(_req->avail_languages);
 
 		session_free(_req->session);
+		if (_req->session_store)
+			session_store_cleanup(_req->session_store);
 		session_store_free(_req->session_store);
 
 		htpasswd_free(_req->htpasswd);
 
 		memmap_free(_req->tmpl_file);
-
-		if (_req->session_store)
-			session_store_cleanup(_req->session_store);
 	}
 }
 
