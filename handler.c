@@ -761,8 +761,10 @@ param_new(const char *_name, const char *_value)
 	struct param *p = calloc(1, sizeof(struct param));
 	if (_name)
 		p->name = strdup(_name);
-	if (_value)
+	if (_value) {
 		p->value = strdup(_value);
+		param_decode(p);
+	}
 	return p;
 }
 
@@ -770,7 +772,8 @@ param_new(const char *_name, const char *_value)
 void
 param_decode(struct param *_param)
 {
-	decode_string(_param->value);
+	if (_param->value)
+		decode_string(_param->value);
 }
 
 
