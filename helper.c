@@ -180,9 +180,10 @@ md_mmap_free(struct md_mmap *_md)
 
 
 static const struct lowdown_opts ldopts = {
-	LOWDOWN_HTML,
-	LOWDOWN_STRIKE | LOWDOWN_AUTOLINK | LOWDOWN_FENCED | LOWDOWN_TABLES,
-	0
+	.type = LOWDOWN_HTML,
+	.feat = LOWDOWN_STRIKE | LOWDOWN_AUTOLINK | LOWDOWN_FENCED 
+	    | LOWDOWN_TABLES,
+	.oflags = LOWDOWN_HTML_HEAD_IDS | LOWDOWN_HTML_NUM_ENT
 };
 
 
