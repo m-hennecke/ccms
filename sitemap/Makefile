@@ -5,7 +5,7 @@
 PROG=		sitemap
 SRCS=		sitemap_cgi.c filehelper.c buffer.c sitemap.c
 
-CFLAGS+=	-I..
+CFLAGS+=	-I"${.CURDIR}/../"
 LDADD+=		-lutil -lz
 LDSTATIC=	${STATIC}
 NOMAN=		1

@@ -5,7 +5,7 @@
 PROG=		cgienv
 SRCS=		cgienv.c template.c tmpl_parser.c buffer.c helper.c
 
-CFLAGS+=	-I.. -I/usr/local/include
+CFLAGS+=	-I"${.CURDIR}/../" -I/usr/local/include
 CFLAGS+=	-Wall
 CFLAGS+=	-Wstrict-prototypes -Wmissing-prototypes
 CFLAGS+=	-Wmissing-declarations
