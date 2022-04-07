@@ -39,16 +39,16 @@ struct sitemap {
 	char				*hostname;
 };
 
-struct lang_entry	*lang_entry_new(char *);
+struct lang_entry	*lang_entry_new(const char *);
 struct url_entry	*url_entry_new(char *, time_t);
 void			 lang_entry_free(struct lang_entry *);
 void			 url_entry_free(struct url_entry *);
-struct sitemap		*sitemap_new(char *_content_dir, char *_hostname);
+struct sitemap		*sitemap_new(const char *, const char *);
 void			 sitemap_free(struct sitemap *);
 char			*sitemap_toxml(struct sitemap *);
 char			*sitemap_toxmlgz(struct sitemap *, size_t *,
-		const char *_filename, uint32_t _mtime);
-uint32_t		 sitemap_newest(struct sitemap *, const char *_lang);
+    const char *, uint32_t);
+uint32_t		 sitemap_newest(struct sitemap *, const char *);
 
 
 #endif //__SITEMAP_H__

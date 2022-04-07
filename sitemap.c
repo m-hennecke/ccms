@@ -31,13 +31,15 @@
 
 
 static char			*concat_path(const char *, const char *);
-static struct lang_entry	*read_language_dir(char *_content_dir, char *,
-		char *);
-static struct url_entry		*read_pages_dir(char *, char *, char *, char *);
-static char			*format_time(time_t _datetime);
-static char			*format_url(char *_hostname, char *_lang,
-		char *_page, bool ssl);
+static struct lang_entry	*read_language_dir(const char *, const char *,
+    const char *);
+static struct url_entry		*read_pages_dir(const char *, const char *,
+    const char *, const char *);
+static char			*format_time(time_t);
+static char			*format_url(const char *, const char *,
+    const char *, bool ssl);
 static struct buffer_list	*create_xml_buffers(struct sitemap *);
+
 
 struct url_entry *
 url_entry_new(char *_url, time_t _mtime)
@@ -60,7 +62,7 @@ url_entry_free(struct url_entry *_url)
 
 
 struct lang_entry *
-lang_entry_new(char *_lang)
+lang_entry_new(const char *_lang)
 {
 	struct lang_entry *lang = malloc(sizeof(struct lang_entry));
 	lang->lang = strdup(_lang);
@@ -102,7 +104,8 @@ sitemap_free(struct sitemap *_sitemap)
 
 
 struct url_entry *
-read_pages_dir(char *_content_dir, char *_lang, char *_page, char *_hostname)
+read_pages_dir(const char *_content_dir, const char *_lang, const char *_page,
+    const char *_hostname)
 {
 	char *path;
 	if (asprintf(&path, "%s/%s/%s", _content_dir, _lang, _page) == -1)
@@ -121,7 +124,8 @@ read_pages_dir(char *_content_dir, char *_lang, char *_page, char *_hostname)
 
 
 struct lang_entry *
-read_language_dir(char *_content_dir, char *_lang, char *_hostname)
+read_language_dir(const char *_content_dir, const char *_lang,
+    const char *_hostname)
 {
 	char *lang_path = concat_path(_content_dir, _lang);
 	struct dir_list *dir = get_dir_entries(lang_path);
@@ -148,7 +152,7 @@ read_language_dir(char *_content_dir, char *_lang, char *_hostname)
 
 
 struct sitemap *
-sitemap_new(char *_content_dir, char *_hostname)
+sitemap_new(const char *_content_dir, const char *_hostname)
 {
 	struct sitemap *sitemap = malloc(sizeof(struct sitemap));
 	TAILQ_INIT(&sitemap->languages);
@@ -263,12 +267,13 @@ format_time(time_t _datetime)
 
 
 char *
-format_url(char *_hostname, char *_lang, char *_page, bool ssl)
+format_url(const char *_hostname, const char *_lang, const char *_page,
+    bool ssl)
 {
-	char *http = (ssl) ? "https" : "http";
+	const char *http = (ssl) ? "https" : "http";
 	char *url;
 	if (asprintf(&url, "%s://%s%s%s/%s.html", http, _hostname,
-				CMS_ROOT_URL, _lang, _page) == -1)
+	    CMS_ROOT_URL, _lang, _page) == -1)
 		err(1, NULL);
 	return url;
 }
