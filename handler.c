@@ -179,10 +179,10 @@ page_info_free(struct page_info *_info)
 	if (NULL == _info)
 		return;
 
-	memmap_free(_info->content);
-	memmap_free(_info->descr);
+	md_mmap_free(_info->content);
+	md_mmap_free(_info->descr);
 	memmap_free(_info->link);
-	memmap_free(_info->login);
+	md_mmap_free(_info->login);
 	memmap_free(_info->sort);
 	memmap_free(_info->style);
 	memmap_free(_info->script);
@@ -384,13 +384,23 @@ request_fetch_page(struct request *_req)
 
 	TAILQ_FOREACH(e, &files->entries, entries) {
 		if (strcmp("CONTENT", e->filename) == 0) {
-			p->content = memmap_new_at(cwd, e->filename);
+			if (p->content == NULL)
+				p->content = md_mmap_new_at(cwd, e->filename);
+		} else if (strcmp("CONTENT.md", e->filename) == 0) {
+			md_mmap_free(p->content);
+			p->content = md_mmap_new_at(cwd, e->filename);
+			md_mmap_parse(p->content);
 		} else if (strcmp("DESCR", e->filename) == 0) {
-			p->descr = memmap_new_at(cwd, e->filename);
+			if (p->descr == NULL)
+				p->descr = md_mmap_new_at(cwd, e->filename);
+		} else if (strcmp("DESCR.md", e->filename) == 0) {
+			md_mmap_free(p->descr);
+			p->descr = md_mmap_new_at(cwd, e->filename);
+			md_mmap_parse(p->descr);
 		} else if (strcmp("LINK", e->filename) == 0) {
 			p->link = memmap_new_at(cwd, e->filename);
 		} else if (strcmp("LOGIN", e->filename) == 0) {
-			p->login = memmap_new_at(cwd, e->filename);
+			p->login = md_mmap_new_at(cwd, e->filename);
 		} else if (strcmp("SORT", e->filename) == 0) {
 			p->sort = memmap_new_at(cwd, e->filename);
 		} else if (strcmp("SCRIPT", e->filename) == 0) {
@@ -449,10 +459,13 @@ request_init_tmpl_data(struct request *_req)
 {
 	_req->data = tmpl_data_new();
 	tmpl_data_set_variable(_req->data, "CURRENT_PAGE", _req->path_info);
-	if (_req->page_info->descr)
-		tmpl_data_set_variablen(_req->data, "DESCR",
-				_req->page_info->descr->data,
-				_req->page_info->descr->size);
+	if (_req->page_info->descr) {
+		void	*data;
+		size_t	 size;
+		md_mmap_content(_req->page_info->descr, &data, &size);
+
+		tmpl_data_set_variablen(_req->data, "DESCR", data, size);
+	}
 
 	return _req->data;
 }
@@ -533,8 +546,11 @@ request_render_page(struct request *_req, const char *_tmpl_filename)
 	struct buffer_list *result = NULL;
 
 	if (_req->content) {
-		cb = tmpl_parse(_req->content->data, _req->content->size,
-				_req->data);
+		void	*data;
+		size_t	 size;
+		md_mmap_content(_req->content, &data, &size);
+
+		cb = tmpl_parse(data, size, _req->data);
 		tmpl_data_set_variable(_req->data, "CONTENT",
 				buffer_list_concat_string(cb));
 	} else {
@@ -745,8 +761,10 @@ param_new(const char *_name, const char *_value)
 	struct param *p = calloc(1, sizeof(struct param));
 	if (_name)
 		p->name = strdup(_name);
-	if (_value)
+	if (_value) {
 		p->value = strdup(_value);
+		param_decode(p);
+	}
 	return p;
 }
 
@@ -754,7 +772,8 @@ param_new(const char *_name, const char *_value)
 void
 param_decode(struct param *_param)
 {
-	decode_string(_param->value);
+	if (_param->value)
+		decode_string(_param->value);
 }
 
 

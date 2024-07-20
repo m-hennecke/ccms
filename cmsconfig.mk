@@ -2,6 +2,7 @@
 
 CMS_HOSTNAME?=		`hostname`
 CMS_ROOT_DIR?=		/var/www/cms
+CMS_HTROOT?=		/var/www/htdocs
 CONTENT_DIR=		${ROOT_DIR}/content
 TEMPLATE_DIR=		${ROOT_DIR}/templates
 SESSION_DIR=		${ROOT_DIR}/session

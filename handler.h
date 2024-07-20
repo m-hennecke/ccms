@@ -33,10 +33,10 @@ extern char *cms_session_htpasswd;
 struct page_info {
 	char		*path;
 
-	struct memmap	*content;
-	struct memmap	*descr;
+	struct md_mmap	*content;
+	struct md_mmap	*descr;
 	struct memmap	*link;
-	struct memmap	*login;
+	struct md_mmap	*login;
 	struct memmap	*sort;
 	struct memmap	*style;
 	struct memmap	*script;
@@ -96,7 +96,7 @@ struct request {
 
 	struct page_info	*page_info;
 	struct tmpl_data	*data;
-	struct memmap		*content;
+	struct md_mmap		*content;
 
 	struct memmap		*tmpl_file;
 
