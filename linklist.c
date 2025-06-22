@@ -143,14 +143,24 @@ _link_new_at(int _fd, char *_dirname)
 	link->link = memmap_new_at(dirfd, "LINK");
 	if (link->link == NULL)
 		goto bailout;
-	link->descr = memmap_new_at(dirfd, "DESCR");
-	if (link->descr == NULL)
+
+	struct stat sb;
+	if (fstatat(dirfd, "DESCR", &sb, 0) != -1) {
+		link->descr = memmap_new_at(dirfd, "DESCR");
+		if (link->descr == NULL)
+			goto bailout;
+	} else if (fstatat(dirfd, "DESCR.md", &sb, 0) != -1) {
+		link->descr = memmap_new_at(dirfd, "DESCR.md");
+		if (link->descr == NULL)
+			goto bailout;
+	} else {
+		warnx("unable to find DESCR or DESCR.md in %s", _dirname);
 		goto bailout;
+	}
 	link->sort = memmap_new_at(dirfd, "SORT");
 	if (link->sort == NULL)
 		goto bailout;
 
-	struct stat sb;
 	if (fstatat(dirfd, "SUB", &sb, 0) != -1)
 		link->sub = ((sb.st_mode & S_IFREG) != 0);
 	if (fstatat(dirfd, "SSL", &sb, 0) != -1)
@@ -290,7 +300,7 @@ request_get_language_links(struct request *_req)
 			int fd = openat(_req->content_dir, dirent->d_name,
 					O_DIRECTORY | O_RDONLY);
 			if (-1 == fd) {
-				warn(NULL);
+				warn("%s", dirent->d_name);
 				continue;
 			}
 			if (dir_exists_at(fd, _req->page)) {
