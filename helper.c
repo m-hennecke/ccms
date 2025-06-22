@@ -78,7 +78,7 @@ memmap_new(const char *_filename)
 {
 	int fd = open(_filename, O_RDONLY);
 	if (-1 == fd) {
-		warn(NULL);
+		warn("open(%s) in %s", _filename, __func__);
 		return NULL;
 	}
 
@@ -91,7 +91,7 @@ memmap_new_at(int _fd, const char *_filename)
 {
 	int fd = openat(_fd, _filename, O_RDONLY);
 	if (-1 == fd) {
-		warn(NULL);
+		warn("openat(%s) in %s", _filename, __func__);
 		return NULL;
 	}
 
@@ -141,7 +141,7 @@ md_mmap_new_at(int _fd, const char *_filename)
 {
 	int fd = openat(_fd, _filename, O_RDONLY);
 	if (-1 == fd) {
-		warn(NULL);
+		warn("openat(%s) in %s", _filename, __func__);
 		return NULL;
 	}
 
